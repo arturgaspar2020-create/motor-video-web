@@ -18,7 +18,8 @@ export default function App() {
   const [script, setScript] = useState(initial);
   const [audio, setAudio] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState("");
-  const [model, setModel] = useState<File | null>(null);\n  const [modelUrl, setModelUrl] = useState("");
+  const [model, setModel] = useState<File | null>(null);
+  const [modelUrl, setModelUrl] = useState("");
   const [selected, setSelected] = useState(0);
   const [ratio, setRatio] = useState<Ratio>("16:9");
   const [fps, setFps] = useState("30");
@@ -59,7 +60,13 @@ export default function App() {
     if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudio(file); setAudioUrl(URL.createObjectURL(file)); setStatus("Áudio carregado");
   }
-  function uploadModel(file?: File) {\n    if (!file) return;\n    if (!file.name.toLowerCase().endsWith(".glb")) { setStatus("O modelo precisa estar no formato .glb"); return; }\n    if (modelUrl) URL.revokeObjectURL(modelUrl);\n    setModel(file); setModelUrl(URL.createObjectURL(file)); setStatus("Modelo 3D carregado");\n  }\n  function updateJob(updated: Job) {
+  function uploadModel(file?: File) {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".glb")) { setStatus("O modelo precisa estar no formato .glb"); return; }
+    if (modelUrl) URL.revokeObjectURL(modelUrl);
+    setModel(file); setModelUrl(URL.createObjectURL(file)); setStatus("Modelo 3D carregado");
+  }
+  function updateJob(updated: Job) {
     setJobs(previous => {
       const exists = previous.some(item => item.id === updated.id);
       return exists ? previous.map(item => item.id === updated.id ? updated : item) : [updated, ...previous];
@@ -72,7 +79,8 @@ export default function App() {
     const [width, height] = dimensions[ratio];
     const data = new FormData();
     data.append("project", JSON.stringify({ script, settings: { ratio, fps } }));
-    data.append("audio", audio, audio.name);\n    if (model) data.append("model", model, model.name);\n    data.append("width", String(width));
+    data.append("audio", audio, audio.name);
+    if (model) data.append("model", model, model.name);\n    data.append("width", String(width));
     data.append("height", String(height)); data.append("fps", fps);
     let jobId = "";
     try {
