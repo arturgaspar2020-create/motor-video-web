@@ -25,7 +25,7 @@ export const CinematicVideo: React.FC<CinematicVideoProps> = ({shots, audioFile,
   const cameraY=aerial?10:close?3.4:5.2;
   const cameraZ=close?6:10;
   return <>
-    <ThreeCanvas width={width} height={height} camera={{position: [cameraX, cameraY, cameraZ], fov: close?30:38}} gl={{antialias: true, alpha: false, powerPreference: "high-performance"}}>
+    <ThreeCanvas shadows width={width} height={height} camera={{position: [cameraX, cameraY, cameraZ], fov: close?30:38}} gl={{antialias: true, alpha: false, powerPreference: "high-performance"}}>
       <CanvasWorld shots={shots} modelFile={modelFile ? staticFile(modelFile) : undefined}/>
     </ThreeCanvas>
     {audioFile ? <Audio src={staticFile(audioFile)} /> : null}
