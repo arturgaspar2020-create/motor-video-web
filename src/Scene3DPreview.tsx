@@ -108,6 +108,25 @@ export default function Scene3DPreview({ name, type, directives, ratio, modelUrl
 
     const clock = new THREE.Clock();
     let frame = 0;
+    let disposed = false;
+    let modelRoot: THREE.Object3D | null = null;
+    let modelMixer: THREE.AnimationMixer | null = null;
+    if (modelUrl) {
+      new GLTFLoader().load(modelUrl, gltf => {
+        if (disposed) return;
+        modelRoot = gltf.scene;
+        const bounds = new THREE.Box3().setFromObject(modelRoot);
+        const size = bounds.getSize(new THREE.Vector3());
+        const scale = size.y > 0 ? 2.75 / size.y : 1;
+        modelRoot.scale.setScalar(scale);
+        modelRoot.position.set(0, -bounds.min.y * scale, 0);
+        scene.add(modelRoot);
+        if (gltf.animations.length) {
+          modelMixer = new THREE.AnimationMixer(modelRoot);
+          modelMixer.clipAction(gltf.animations[0]).play();
+        }
+      }, undefined, () => { root.dataset.error = "Não foi possível carregar o modelo GLB."; });
+    }
     const animate = () => {
       frame = requestAnimationFrame(animate);
       const t = clock.getElapsedTime();
