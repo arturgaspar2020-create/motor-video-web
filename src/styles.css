@@ -2,3 +2,22 @@
 .actions button:disabled,.render-wide:disabled{opacity:.5;cursor:not-allowed}
 .render-wide{width:100%;padding:13px;margin:4px 0 8px;font-size:12px;letter-spacing:.5px}
 .render-log{white-space:pre-wrap;max-height:260px;overflow:auto;background:#080e18;border:1px solid #29364d;padding:12px;border-radius:7px;color:#a9c6ed;font:10px/1.6 'DM Mono',monospace}
+
+
+.stop-wide,.stop-button{background:#572a31;border-color:#a94b57;color:#ffe1e4}
+.stop-wide{width:100%;padding:12px;margin:0 0 9px;font-size:11px}
+.jobs-panel{margin-top:18px}
+.job-card{border:1px solid #2b3c55;background:#0a1320;border-radius:9px;padding:14px;margin:10px 0}
+.job-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.job-top>div{display:grid;gap:5px;min-width:0}
+.job-top b{font-size:13px}.job-top small{font:10px 'DM Mono';color:#8290a8;overflow-wrap:anywhere}
+.job-status{font:9px 'DM Mono';letter-spacing:.5px;color:#9fb4d4}
+.job-status.completed{color:#6ad6a3}.job-status.error{color:#ff8790}.job-status.canceled{color:#e4c990}
+.progress-track{height:8px;background:#1b293d;border-radius:99px;overflow:hidden;margin:14px 0 6px}
+.progress-fill{height:100%;background:#568ce8;transition:width .4s ease}
+.progress-label{font:10px 'DM Mono';color:#9aabc4}
+.job-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.job-details{border-top:1px solid #29364d;margin-top:13px;padding-top:12px}
+.job-details>b{font:10px 'DM Mono';color:#9db9e8;letter-spacing:.8px}
+.job-details p{font-size:11px;color:#b7c4d8}
+@media(max-width:600px){.job-top{align-items:flex-start;flex-direction:column}.job-actions button{flex:1}}
