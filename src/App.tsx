@@ -17,7 +17,8 @@ const dimensions: Record<Ratio, [number, number]> = {
 export default function App() {
   const [script, setScript] = useState(initial);
   const [audio, setAudio] = useState<File | null>(null);
-  const [audioUrl, setAudioUrl] = useState("");\n  const [model, setModel] = useState<File | null>(null);\n  const [modelUrl, setModelUrl] = useState("");
+  const [audioUrl, setAudioUrl] = useState("");
+  const [model, setModel] = useState<File | null>(null);\n  const [modelUrl, setModelUrl] = useState("");
   const [selected, setSelected] = useState(0);
   const [ratio, setRatio] = useState<Ratio>("16:9");
   const [fps, setFps] = useState("30");
@@ -25,7 +26,8 @@ export default function App() {
   const [rendering, setRendering] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [activeJobId, setActiveJobId] = useState("");
-  const audioInput = useRef<HTMLInputElement>(null);\n  const modelInput = useRef<HTMLInputElement>(null);
+  const audioInput = useRef<HTMLInputElement>(null);
+  const modelInput = useRef<HTMLInputElement>(null);
   const projectInput = useRef<HTMLInputElement>(null);
   const project = useMemo(() => parseScript(script), [script]);
   const scene = project.scenes[selected];
