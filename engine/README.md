@@ -1,82 +1,70 @@
-# Renderizador local — Motor Video Studio
+# Motor Video Studio — Renderização 3D
 
-O renderizador cria MP4 localmente com FFmpeg. Quando uma cena não tem `[asset: ...]`, gera uma animação procedural 2D simples com bonecos blocados, cenário e movimentos básicos usando Pillow. Isso é um protótipo 2D, não animação 3D real.
+O fluxo principal da interface usa **Remotion + Three.js** para compor cenas 3D e exportar MP4. O antigo `engine/render.py` continua disponível como renderizador 2D legado.
 
-## O que já faz
-- Lê o JSON exportado pelo botão **Salvar projeto** da interface.
-- Interpreta os blocos `[cena: tipo | nome]`.
-- Aceita `[asset: caminho/arquivo]` dentro de cada cena.
-- Aceita `[duracao: segundos]` dentro de cada cena.
-- Usa imagens com movimento de câmera suave e vídeos como fundos.\n- Gera automaticamente cenas 2D procedurais quando não há asset: fundos, personagens blocados e movimentos básicos.\n- Mantém o áudio da narração no MP4.
-- Concatena as cenas e adiciona a narração.
-- Informa quando os tempos são estimados, em vez de sincronização real por palavra.
+## Renderização pela interface (recomendado)
 
-## O que ainda não faz
-- Não gera imagens ou modelos 3D por conta própria.
-- Não renderiza GLB nem executa animações 3D.
-- Não faz alinhamento forçado palavra-áudio.
-- Não cria trilha, efeitos sonoros ou legendas automáticas.
-- Cena sem `[asset: ...]` vira um cartão com o nome da cena; isso é intencional e evita fingir que existe um visual.
+1. Instale Node.js 20.19+ ou 22.12+.
+2. Na pasta do projeto, execute `npm install`.
+3. Execute `npm run dev` e abra o endereço local do Vite.
+4. Insira o roteiro com marcadores `[cena: tipo | nome]`.
+5. Carregue o áudio. Opcionalmente carregue um personagem `.glb` com rig e animações.
+6. Clique em **GERAR MP4**.
 
-## Requisitos gratuitos no Windows
-1. Python 3.10 ou superior.
-2. FFmpeg instalado e disponível no PATH (os comandos `ffmpeg` e `ffprobe` precisam funcionar no CMD).
-3. O projeto JSON salvo pela interface.
-4. O áudio e os assets visuais em arquivos locais.
+A primeira renderização pode baixar o Chromium Headless Shell do Remotion. O motor usa ANGLE/WebGL e concorrência limitada para reduzir a pressão de memória.
 
-## Exemplo de roteiro
+## Personagens GLB
+
+- O arquivo precisa ser .glb.
+- Prefira um modelo humanoide rigado, com animações embutidas (por exemplo, Idle, Walk, Run).
+- O motor ajusta automaticamente a altura do modelo para caber na cena.
+- Se não enviar GLB, o vídeo usa o personagem procedural estilizado.
+- O nome das animações ajuda a selecionar o clipe: Idle/Stand, Walk ou Run.
+
+## Diretivas de roteiro
 
 ```text
 @idioma pt-BR
-@titulo A ponte que decidiu uma guerra
+@titulo Exemplo
 
-[cena: imagem | ponte]
-[asset: media/ponte.jpg]
-[duracao: 8]
-A ponte era o único caminho para atravessar o rio.
-
-[cena: video | exercito]
-[asset: media/exercito.mp4]
-[duracao: 7]
-O exército inimigo avançava em direção à passagem.
+[cena: ambiente | Floresta]
+[ambiente: floresta com neblina ao amanhecer]
+[luz: luz dourada atravessando as árvores]
+[elementos: mapa, lanterna, mochila]
+[acao: o explorador caminha e aponta para o mapa]
+[camera: plano aberto com aproximação]
+A narração desta cena aparece aqui.
 ```
 
-Os caminhos de `asset` são relativos à pasta onde está o arquivo JSON do projeto ou podem ser absolutos.
+Diretivas reconhecidas: `[acao:]`, `[movimento:]`, `[animacao:]`, `[ambiente:]`, `[luz:]`, `[camera:]`, `[elementos:]`, `[objetos:]`, `[posicao:]`, `[posicoes:]` e `[duracao:]`.
 
-## Como renderizar pela interface (novo)
+Os ambientes procedurais reconhecem palavras comuns em português, inglês e alemão para floresta, cidade, interior, deserto, neve, guerra e água. Objetos reconhecidos incluem mapa/livro, lanterna, espada/faca, chave, porta e caixa.
 
-1. Atualize o repositório e instale as dependências com `npm install`.\n2. Instale Pillow com `python -m pip install -r engine/requirements.txt`.
-2. Inicie com `npm run dev`.
-3. Abra o endereço local, carregue o áudio e clique em **GERAR MP4**.
-4. O servidor local recebe o roteiro e o áudio, executa o renderizador Python e devolve o MP4 para baixar.
+## Sincronização de áudio
 
-O endpoint de renderização existe apenas no servidor local de desenvolvimento do Vite. O áudio e o roteiro não são enviados a serviços externos.
+Por padrão, a duração de cada plano é estimada pela quantidade de palavras na cena. Não é sincronização exata.
 
-## Como renderizar pelo terminal
-
-Abra o CMD na pasta do projeto e execute:
+Para tentar timestamps de palavras com faster-whisper:
 
 ```bash
-python engine/render.py --project projeto-motor-video.json --audio narracao.mp3 --output video-final.mp4
+python -m pip install -r engine/requirements-alignment.txt
 ```
 
-Para escolher outro formato:
+Depois marque a opção de alinhamento na interface. O modelo `base` roda em CPU int8. A primeira execução baixa os pesos. O script compara as palavras reconhecidas com o texto do roteiro e calcula a cobertura. Se a cobertura for baixa ou o pacote não estiver disponível, o renderizador mantém a estimativa e registra um aviso.
+
+Esse recurso é reconhecimento de fala com timestamps, não forced alignment perfeito. Roteiro diferente do áudio, nomes próprios ou pronúncias incomuns podem reduzir a precisão.
+
+## Renderizador Python 2D legado
+
+O arquivo `render.py` não é chamado pelo botão principal de exportação 3D. Ele permanece para projetos antigos com imagens/vídeos e animação procedural 2D.
 
 ```bash
-python engine/render.py --project projeto-motor-video.json --audio narracao.mp3 --output video-vertical.mp4 --width 1080 --height 1920 --fps 30
+python -m pip install -r engine/requirements.txt
+python engine/render.py --project projeto-motor-video.json --audio narracao.mp3 --output video-2d.mp4
 ```
 
-Se não definir `[duracao: ...]` em nenhuma cena, o motor distribui a duração total do áudio proporcionalmente à quantidade de palavras de cada cena. **Isso é uma estimativa**, não sincronização precisa. Para evitar estimativas, informe a duração de cada cena ou aguarde a futura integração de alinhamento forçado.
+## Diagnóstico
 
-## Formatos de asset
-- Imagens: PNG, JPG, JPEG, WEBP (dependendo dos codecs instalados no FFmpeg).
-- Vídeos: MP4, MOV, MKV, WEBM, AVI (dependendo dos codecs instalados).
+O MP4 e o arquivo `*-director-plan.json` são salvos no diretório temporário do trabalho durante a sessão do servidor; baixe o MP4 pela área **Vídeos gerados**. Em caso de falha, use **COPIAR RELATÓRIO** para trazer o log completo.
 
-## Próximas etapas
-1. Alinhamento de áudio por frase/palavra e edição de timeline.
-2. Legendas, títulos, transições, overlays e trilhas.
-3. Integração Blender para renderização 3D/GLB em CPU quando possível.
-4. Gerador assistido de cenas e biblioteca local de assets.
-5. Testes automatizados e instalador Windows.
-
-O renderizador não envia arquivos para serviços externos. O processamento acontece no computador.
+O build e a primeira renderização precisam ser testados no Windows de destino. Drivers WebGL, permissões de execução e disponibilidade do Chromium podem variar entre computadores.
