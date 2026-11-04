@@ -73,7 +73,7 @@ scenes.forEach((scene,index)=>{
       animation:(d.animacao||[]).at(-1)||"",
       environment:(d.ambiente||[]).at(-1)||"",
       lighting:(d.luz||[]).at(-1)||"",
-      camera:(d.camera||[]).at(-1)||"",
+      camera:(d.camera||d.animacao||[]).at(-1)||"",
       objects:[...(d.elementos||[]),...(d.objetos||[])],
       position:(d.posicao||d.posicoes||[]).at(-1)||"",
       start:Number(cursor.toFixed(4)),end:Number((cursor+duration).toFixed(4)),duration:Number(duration.toFixed(4))
