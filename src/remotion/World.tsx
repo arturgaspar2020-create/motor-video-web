@@ -22,7 +22,6 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
  const crouching=/crouch|agacha|ajoelha|kneel|kniet|duckt/i.test(action);
  const t=frame/fps;
  const progress=motionProgress(t,duration);
- const travel=walking?Math.min(duration*(running?2.7:1.15),t*(running?2.7:1.15)):0;
  const happy=/happy|feliz|sorr|freude|glueck/i.test(expression);
  const surprised=/surpres|surprise|medo|fear|erschrocken|shock/i.test(expression);
  const sad=/triste|sad|traurig/i.test(expression);
