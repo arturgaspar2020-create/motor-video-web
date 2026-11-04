@@ -33,3 +33,15 @@
 .scene3d-frame[data-error] .scene3d-error{display:grid}
 .scene3d-vertical{height:520px;width:min(100%,360px);margin:auto}
 @media(max-width:800px){.scene3d-frame{height:330px}.scene3d-vertical{height:480px}}
+
+
+.ai-box{border:1px solid #35547b;background:linear-gradient(135deg,#14243a,#101b2b);border-radius:9px;padding:13px;margin:0 0 12px}
+.ai-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ai-top>div{display:grid;gap:5px}
+.ai-top b,.ai-result>b{font:10px 'DM Mono';letter-spacing:.7px;color:#a9c9ff}
+.ai-top small,.ai-help{font:10px 'DM Mono';color:#9aabc4}
+.ai-box p{font-size:11px;line-height:1.55;color:#bac8dc;margin:9px 0}
+.ai-analyze{width:100%;padding:12px;font-size:11px;letter-spacing:.4px}
+.ai-result{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:11px;padding-top:10px;border-top:1px solid #30435d}
+.ai-result span{font:10px 'DM Mono';color:#a8e0c2;flex:1}
+.ai-help{display:block;margin-top:10px;line-height:1.5}

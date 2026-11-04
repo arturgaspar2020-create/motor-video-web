@@ -15,6 +15,16 @@ Editor local para transformar roteiro + narração em vídeo 3D cinematográfico
 - Upload opcional de personagem .glb; se o arquivo tiver animações incorporadas, o motor seleciona clipes por nome e os executa no tempo da composição.
 - Saída 16:9, 9:16 ou 1:1, 24/30/60 FPS conforme a interface.
 
+
+### Análise inteligente de roteiro — IA local gratuita
+- Botão **Analisar roteiro com IA** usa Ollama no próprio computador, sem API externa, assinatura ou créditos.
+- Modelo padrão: `qwen3:4b`; o primeiro download requer internet e alguns GB de espaço. Depois de instalado, a análise é local.
+- A IA identifica uma ação, câmera, objetos, ambiente, personagem e emoção para cada frase.
+- O sistema adiciona marcadores técnicos `[shot: {...}]` sem reescrever as frases da narração. O renderizador 3D lê esses marcadores individualmente por plano.
+- Instalação no Windows: instale Ollama em https://ollama.com/download/windows e execute `instalar-ia-local.bat` na pasta do projeto. O arquivo baixa o modelo Qwen3 4B.
+- Inicie o Ollama antes de abrir/analisar no estúdio. Use **Verificar IA** para confirmar a conexão.
+- Requer recursos do PC; velocidade e qualidade variam conforme RAM/GPU. A IA é assistente de direção, não gera automaticamente novos modelos 3D nem garante que toda ação tenha animação disponível.
+
 ### Sincronização da narração
 - Por padrão, os tempos são estimados pela contagem de palavras. Isso não é alinhamento palavra por palavra.
 - Há opção de alinhamento local assistido por faster-whisper, usando timestamps de palavras reconhecidas.

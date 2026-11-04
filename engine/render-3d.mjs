@@ -95,7 +95,9 @@ function parseScript(source) {
   source.replace(/\r/g,"").split("\n").forEach((raw,index)=>{
     const line=raw.trim(); if(!line || line.startsWith("@"))return;
     const match=line.match(/^\[cena:\s*([^\]|]+)(?:\|\s*([^\]]+))?\]$/i);
-    if(match){flush();current={id:scenes.length+1,type:match[1].trim(),name:(match[2]||match[1]).trim(),directives:{},narration:[]};return;}
+    if(match){flush();current={id:scenes.length+1,type:match[1].trim(),name:(match[2]||match[1]).trim(),directives:{},shotDirectives:[],narration:[]};return;}
+    const shotMarker=line.match(/^\[shot:\s*(\{.*\})\]$/i);
+    if(shotMarker){if(current){try{current.shotDirectives.push(JSON.parse(shotMarker[1]));}catch{console.log("AVISO: marcador [shot:] inválido na linha "+(index+1));}}else warnings.push("Marcador fora de cena na linha "+(index+1));return;}
     const marker=line.match(/^\[([^:]+):\s*([^\]]*)\]$/);
     if(marker){if(current){const key=marker[1].trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");(current.directives[key]??=[]).push(marker[2].trim());}else warnings.push("Marcador fora de cena na linha "+(index+1));return;}
     if(current)current.narration.push(raw);else warnings.push("Texto antes da primeira cena na linha "+(index+1));
@@ -122,16 +124,18 @@ scenes.forEach((scene,index)=>{
   sentences.forEach((sentence,shotIndex)=>{
     const duration=sceneDurations[index]*words[shotIndex]/sceneWords;
     const d=scene.directives;
+    const ai=scene.shotDirectives?.[shotIndex]||{};
     shots.push({
       id:"S"+String(index+1).padStart(3,"0")+"-P"+String(shotIndex+1).padStart(2,"0"),
       scene_id:index+1,scene_name:scene.name,scene_type:scene.type,narration:sentence,
-      action:inferAction(sentence) || (shotIndex===0 ? sceneAction : ""),
-      animation:inferAction(sentence) || (shotIndex===0 ? sceneAnimation : ""),
-      expression:(d.expressao||[]).at(-1)||"",
-      environment:(d.ambiente||[]).at(-1)||"",
+      action:ai.action && ai.action!=="none" ? ai.action : (inferAction(sentence) || (shotIndex===0 ? sceneAction : "")),
+      animation:ai.action && ai.action!=="none" ? ai.action : (inferAction(sentence) || (shotIndex===0 ? sceneAnimation : "")),
+      expression:ai.emotion || (d.expressao||[]).at(-1)||"",
+      environment:ai.environment || (d.ambiente||[]).at(-1)||"",
       lighting:(d.luz||[]).at(-1)||"",
-      camera:inferCamera(sentence,(d.camera||[]).at(-1)||""),
-      objects:[...new Set([...splitObjectLabels([...(d.elementos||[]),...(d.objetos||[])]),...inferObjects(sentence)])],
+      camera:ai.camera || inferCamera(sentence,(d.camera||[]).at(-1)||""),
+      objects:[...new Set([...splitObjectLabels([...(d.elementos||[]),...(d.objetos||[])]),...inferObjects(sentence),...(Array.isArray(ai.objects)?ai.objects:[])])],
+      character:ai.character||"",
       position:(d.posicao||d.posicoes||[]).at(-1)||"",
       start:Number(cursor.toFixed(4)),end:Number((cursor+duration).toFixed(4)),duration:Number(duration.toFixed(4))
     });
