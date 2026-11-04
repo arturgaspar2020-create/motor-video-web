@@ -1,7 +1,8 @@
 import React from "react";
 import {useCurrentFrame} from "remotion";
 import {Audio, staticFile} from "remotion";
-import {ThreeCanvas} from "@remotion/three";\nimport {inferMotion} from "./motion";
+import {ThreeCanvas} from "@remotion/three";
+import {inferMotion} from "./motion";
 import {CanvasWorld} from "./World";
 
 export type Shot = {
