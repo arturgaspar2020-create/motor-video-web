@@ -39,7 +39,7 @@ function parseScript(source) {
   const scenes=[]; let current=null; const warnings=[];
   const flush=()=>{if(current){current.narration=current.narration.join("\n").trim();scenes.push(current);current=null;}};
   source.replace(/\r/g,"").split("\n").forEach((raw,index)=>{
-    const line=raw.trim(); if(!line)return;
+    const line=raw.trim(); if(!line || line.startsWith("@"))return;
     const match=line.match(/^\[cena:\s*([^\]|]+)(?:\|\s*([^\]]+))?\]$/i);
     if(match){flush();current={id:scenes.length+1,type:match[1].trim(),name:(match[2]||match[1]).trim(),directives:{},narration:[]};return;}
     const marker=line.match(/^\[([^:]+):\s*([^\]]*)\]$/);
@@ -70,7 +70,8 @@ scenes.forEach((scene,index)=>{
       id:"S"+String(index+1).padStart(3,"0")+"-P"+String(shotIndex+1).padStart(2,"0"),
       scene_id:index+1,scene_name:scene.name,scene_type:scene.type,narration:sentence,
       action:(d.acao||d.movimento||[]).at(-1)||"",
-      animation:(d.animacao||[]).at(-1)||"",\n      expression:(d.expressao||[]).at(-1)||"",
+      animation:(d.animacao||[]).at(-1)||"",
+      expression:(d.expressao||[]).at(-1)||"",
       environment:(d.ambiente||[]).at(-1)||"",
       lighting:(d.luz||[]).at(-1)||"",
       camera:(d.camera||d.animacao||[]).at(-1)||"",
