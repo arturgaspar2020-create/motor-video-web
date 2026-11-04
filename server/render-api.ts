@@ -39,13 +39,11 @@ function publicJob(job: Job) {
 
 function appendLog(job: Job, chunk: string) {
   job.log = (job.log + chunk).slice(-MAX_LOG);
-  const matches = [...job.log.matchAll(/Cena (\d+):/g)];
-  if (matches.length) {
-    job.currentScene = Math.max(job.currentScene, Number(matches[matches.length - 1][1]));
-    if (job.totalScenes) job.progress = Math.min(95, Math.round(job.currentScene / job.totalScenes * 95));
-    job.message = job.totalScenes
-      ? `Processando cena ${job.currentScene} de ${job.totalScenes}`
-      : "Renderizando vídeo...";
+  const progressMatches = [...job.log.matchAll(/PROGRESS (\d+)%/g)];
+  if (progressMatches.length) {
+    job.progress = Math.min(99, Number(progressMatches[progressMatches.length - 1][1]));
+    job.currentScene = job.totalScenes ? Math.min(job.totalScenes, Math.ceil(job.totalScenes * job.progress / 100)) : 0;
+    job.message = `Renderização 3D: ${job.progress}%`;
   }
 }
 
@@ -105,16 +103,16 @@ export function renderApi(): Plugin {
                 outputPath, workDir, audioName: path.basename(audioPath), width, height, fps
               };
               jobs.set(jobId, job);
-              const renderer = path.resolve(process.cwd(), "engine", "render.py");
-              const child = spawn(process.platform === "win32" ? "python" : "python3",
-                ["-u", renderer, "--project", projectPath, "--audio", audioPath, "--output", outputPath,
+              const renderer = path.resolve(process.cwd(), "engine", "render-3d.mjs");
+              const child = spawn(process.execPath,
+                [renderer, "--project", projectPath, "--audio", audioPath, "--output", outputPath,
                   "--width", String(width), "--height", String(height), "--fps", String(fps)],
                 { cwd: process.cwd(), windowsHide: true });
               job.child = child;
               child.stdout.on("data", chunk => appendLog(job, chunk.toString()));
               child.stderr.on("data", chunk => appendLog(job, chunk.toString()));
               child.on("error", error => {
-                job.status = "error"; job.message = "Não foi possível iniciar o Python/renderizador.";
+                job.status = "error"; job.message = "Não foi possível iniciar o renderizador Remotion/3D.";
                 appendLog(job, "\nERRO AO INICIAR: " + error.message);
                 void removeJobFiles(job);
               });
@@ -125,7 +123,7 @@ export function renderApi(): Plugin {
                   job.status = "completed"; job.progress = 100; job.message = "Vídeo concluído e pronto para baixar.";
                 } else {
                   job.status = "error"; job.message = "A renderização falhou. Consulte os detalhes do erro.";
-                  if (!job.log.trim()) appendLog(job, `Processo encerrado com código ${code ?? "desconhecido"}.`);
+                  if (!job.log.trim()) appendLog(job, `Processo Remotion encerrado com código ${code ?? "desconhecido"}.`);
                   await removeJobFiles(job);
                 }
               });
