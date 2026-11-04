@@ -20,6 +20,8 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
  const waving=/wave|acen|winken|saluda|winkt/i.test(action);
  const pointing=/point|aponta|zeigt|indica/i.test(action);
  const crouching=/crouch|agacha|ajoelha|kneel|kniet|duckt/i.test(action);
+ const sitting=motion==="sit";
+ const reacting=motion==="react";
  const t=frame/fps;
  const progress=motionProgress(t,duration);
  const happy=/happy|feliz|sorr|freude|glueck/i.test(expression);
@@ -28,9 +30,9 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
  const mouthScale: [number,number,number]=surprised?[.12,.14,.035]:happy?[.15,.065,.035]:sad?[.13,.035,.035]:[.12,.025,.03];
  const swing=walking?Math.sin(t*(running?8:5.8))*(running?.72:.52):Math.sin(t*1.2)*.025;
  const bounce=jumping?Math.abs(Math.sin(t*3.1))*.55:walking?Math.abs(Math.sin(t*(running?8:5.8)))*(running?.13:.07):0;
- const armLeft: [number,number,number]=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:[swing,0,0];
- const armRight: [number,number,number]=pointing?[0,0,.8]:[walking?-swing:0,0,0];
- return <group position={[0,bounce-(crouching ? 0.45 : 0),0]} rotation={[0,(motion==="turn"?progress*Math.PI*.75:Math.sin(t*.35)*.1),0]}>
+ const armLeft: [number,number,number]=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:reacting?[0,0,-.65]:[swing,0,0];
+ const armRight: [number,number,number]=pointing?[0,0,.8]:reacting?[0,0,.65]:[walking?-swing:0,0,0];
+ return <group position={[0,bounce-(crouching ? 0.45 : sitting ? .58 : 0),0]} rotation={[0,(motion==="turn"?progress*Math.PI*.75:Math.sin(t*.35)*.1),reacting?Math.sin(t*15)*.045:0]}>
    <mesh position={[0,1.45,0]} castShadow><capsuleGeometry args={[.43,.85,5,12]}/><meshStandardMaterial color="#b96b43" roughness={.76}/></mesh>
    <mesh position={[0,1.98,0]} castShadow><cylinderGeometry args={[.16,.17,.28,12]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
    <mesh position={[0,1.86,.32]}><boxGeometry args={[.48,.12,.08]}/><meshStandardMaterial color="#e0c9a7"/></mesh>
