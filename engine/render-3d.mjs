@@ -63,29 +63,29 @@ function inferCamera(text, fallback) {
   return fallback || "cinematic medium shot";
 }
 function normalizeWords(value) {
-  return String(value || "").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+  return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 function splitObjectLabels(values) {
-  return values.flatMap(value => String(value || "").split(/[,;\\n]+|\\s+e\\s+/i).map(item => item.trim()).filter(Boolean));
+  return values.flatMap(value => String(value || "").split(/[,;\n]+|\s+e\s+/i).map(item => item.trim()).filter(Boolean));
 }
 function inferObjects(text) {
   const source = normalizeWords(text);
   const rules = [
-    ["clock", /\\b(clock|watch|relogio|horas|uhr)\\b/],
-    ["door", /\\b(door|porta|portao|tur)\\b/],
-    ["window", /\\b(window|janela|fenster)\\b/],
-    ["flashlight", /\\b(flashlight|lantern|lanterna|torch|tocha|laterne|taschenlampe)\\b/],
-    ["photo", /\\b(photo|photograph|picture|fotografia|foto|imagem)\\b/],
-    ["bed", /\\b(bed|cama|bett)\\b/],
-    ["stairs", /\\b(stairs|staircase|escadas|escadaria|treppe)\\b/],
-    ["car", /\\b(car|vehicle|carro|automovel|auto)\\b/],
-    ["tree", /\\b(tree|arvore|arvores|baum|baeume)\\b/],
-    ["backpack", /\\b(backpack|mochila|rucksack)\\b/],
-    ["rock", /\\b(rock|stone|pedra|rocha|stein)\\b/],
-    ["river", /\\b(river|rio|stream|ribeiro)\\b/],
-    ["map", /\\b(map|mapa|karte)\\b/],
-    ["key", /\\b(key|chave|schlussel)\\b/],
-    ["book", /\\b(book|livro|buch)\\b/]
+    ["clock", /\b(clock|watch|relogio|horas|uhr)\b/],
+    ["door", /\b(door|porta|portao|tur)\b/],
+    ["window", /\b(window|janela|fenster)\b/],
+    ["flashlight", /\b(flashlight|lantern|lanterna|torch|tocha|laterne|taschenlampe)\b/],
+    ["photo", /\b(photo|photograph|picture|fotografia|foto|imagem)\b/],
+    ["bed", /\b(bed|cama|bett)\b/],
+    ["stairs", /\b(stairs|staircase|escadas|escadaria|treppe)\b/],
+    ["car", /\b(car|vehicle|carro|automovel|auto)\b/],
+    ["tree", /\b(tree|arvore|arvores|baum|baeume)\b/],
+    ["backpack", /\b(backpack|mochila|rucksack)\b/],
+    ["rock", /\b(rock|stone|pedra|rocha|stein)\b/],
+    ["river", /\b(river|rio|stream|ribeiro)\b/],
+    ["map", /\b(map|mapa|karte)\b/],
+    ["key", /\b(key|chave|schlussel)\b/],
+    ["book", /\b(book|livro|buch)\b/]
   ];
   return rules.filter(([, pattern]) => pattern.test(source)).map(([name]) => name);
 }
