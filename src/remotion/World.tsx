@@ -1,4 +1,6 @@
-import React, {Suspense, useEffect, useMemo, useRef} from "react";\nimport {useGLTF} from "@react-three/drei";\nimport * as THREE from "three";
+import React, {Suspense, useEffect, useMemo} from "react";
+import {useGLTF} from "@react-three/drei";
+import * as THREE from "three";
 import {useCurrentFrame, useVideoConfig, interpolate} from "remotion";
 import type {Shot} from "./Video";
 
