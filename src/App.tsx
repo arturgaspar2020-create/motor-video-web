@@ -82,7 +82,8 @@ export default function App() {
     data.append("project", JSON.stringify({ script, settings: { ratio, fps } }));
     data.append("audio", audio, audio.name);
     if (model) data.append("model", model, model.name);
-    data.append("align", alignAudio ? "true" : "false");\n    data.append("width", String(width));
+    data.append("align", alignAudio ? "true" : "false");
+    data.append("width", String(width));
     data.append("height", String(height)); data.append("fps", fps);
     let jobId = "";
     try {
