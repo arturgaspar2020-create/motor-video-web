@@ -1,4 +1,5 @@
 import React, {Suspense, useLayoutEffect, useMemo} from "react";
+import {useFrame, useThree} from "@react-three/fiber";
 import {useGLTF} from "@react-three/drei";
 import * as THREE from "three";
 import {clone as cloneSkeleton} from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -48,12 +49,18 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
    <mesh position={[-.24,1.58,-.29]} rotation={[0,0,-.22]}><boxGeometry args={[.09,.8,.08]}/><meshStandardMaterial color="#bd9360"/></mesh>
    <mesh position={[.24,1.58,-.29]} rotation={[0,0,.22]}><boxGeometry args={[.09,.8,.08]}/><meshStandardMaterial color="#bd9360"/></mesh>
    {[-1,1].map((side,i)=><group key={side} position={[side*.53,1.92,0]} rotation={i===0?armLeft:armRight}>
-     <mesh position={[0,-.32,0]} castShadow><capsuleGeometry args={[.135,.55,4,9]}/><meshStandardMaterial color="#b96b43"/></mesh>
-     <mesh position={[0,-.68,0]} castShadow><sphereGeometry args={[.145,12,10]}/><meshStandardMaterial color="#d8a47e"/></mesh>
+     <mesh position={[0,-.22,0]} castShadow><capsuleGeometry args={[.125,.38,4,9]}/><meshStandardMaterial color="#b96b43"/></mesh>
+     <group position={[0,-.43,0]} rotation={[walking?swing*.42:reacting?-.35:0,0,0]}>
+       <mesh position={[0,-.2,0]} castShadow><capsuleGeometry args={[.105,.34,4,9]}/><meshStandardMaterial color="#b96b43"/></mesh>
+       <mesh position={[0,-.43,.015]} castShadow><sphereGeometry args={[.12,12,10]}/><meshStandardMaterial color="#d8a47e"/></mesh>
+     </group>
    </group>)}
-   {[-1,1].map((side,i)=><group key={side} position={[side*.22,1.02,0]} rotation={[i===0?swing:-swing,0,0]}>
-     <mesh position={[0,-.42,0]} castShadow><capsuleGeometry args={[.16,.66,4,9]}/><meshStandardMaterial color="#263447"/></mesh>
-     <mesh position={[0,-.83,.12]} castShadow><boxGeometry args={[.34,.2,.52]}/><meshStandardMaterial color="#171f2a"/></mesh>
+   {[-1,1].map((side,i)=><group key={side} position={[side*.22,1.02,0]} rotation={[sitting?-1.05:crouching?-.72:(i===0?swing:-swing),0,0]}>
+     <mesh position={[0,-.24,0]} castShadow><capsuleGeometry args={[.145,.38,4,9]}/><meshStandardMaterial color="#263447"/></mesh>
+     <group position={[0,-.46,0]} rotation={[sitting?1.35:crouching?.85:Math.max(0,Math.sin(t*(running?8:5.8)))*.65,0,0]}>
+       <mesh position={[0,-.22,0]} castShadow><capsuleGeometry args={[.13,.38,4,9]}/><meshStandardMaterial color="#263447"/></mesh>
+       <mesh position={[0,-.45,.13]} castShadow><boxGeometry args={[.31,.16,.48]}/><meshStandardMaterial color="#171f2a"/></mesh>
+     </group>
    </group>)}
  </group>;
 };
@@ -71,12 +78,14 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string;du
  },[gltf.scene]);
  const mixer=useMemo(()=>new THREE.AnimationMixer(model),[model]);
  const selected=useMemo(()=>{
-   const hint=action.toLowerCase();
-   return gltf.animations.find(clip=>/run|renn|lauf/i.test(hint)&&/run|sprint/i.test(clip.name))
-     ||gltf.animations.find(clip=>/walk|geh|wander/i.test(hint)&&/walk/i.test(clip.name))
-     ||gltf.animations.find(clip=>/idle|stand|breath/i.test(clip.name))
-     ||gltf.animations[0];
- },[gltf.animations,action]);
+   const hint=inferMotion(action);
+   if(hint==="run") return gltf.animations.find(clip=>/run|sprint|jog/i.test(clip.name));
+   if(hint==="walk") return gltf.animations.find(clip=>/walk|gehen/i.test(clip.name));
+   if(hint==="sit") return gltf.animations.find(clip=>/sit|sitting/i.test(clip.name));
+   if(hint==="jump") return gltf.animations.find(clip=>/jump/i.test(clip.name));
+   if(hint==="wave") return gltf.animations.find(clip=>/wave/i.test(clip.name));
+   return gltf.animations.find(clip=>/idle|stand|breath/i.test(clip.name));
+  },[gltf.animations,action]);
  useLayoutEffect(()=>{
    mixer.stopAllAction();
    if(selected){mixer.clipAction(selected).play();}
@@ -86,7 +95,7 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string;du
    mixer.setTime(frame/fps);
    model.updateMatrixWorld(true);
  },[mixer,frame,fps,model]);
- return <primitive object={model} position={[0,0,0]} />;
+ return selected ? <primitive object={model} position={[0,0,0]} /> : <Character frame={frame} fps={fps} action={action} duration={duration}/>;
 };
 
 const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;action:string}> = ({label,index,frame,fps,action}) => {
@@ -115,6 +124,7 @@ const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;acti
 export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const frame=useCurrentFrame();
  const {fps}=useVideoConfig();
+ const {camera}=useThree();
  const seconds=frame/fps;
  const shot=shots.find((item,index)=>seconds>=item.start&&(seconds<item.end||index===shots.length-1))||shots[shots.length-1];
  const expression=shot?.expression||"";
@@ -132,12 +142,20 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const ground=isSnow?"#cbd5df":isDesert?"#a98a58":"#52634c";
  const sky=isNight?"#101b34":isSnow?"#aebdca":"#91a9bd";
  const t=frame/fps;
- const shotProgress=shot?interpolate(seconds,[shot.start,Math.max(shot.start+.001,shot.end)],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp"}):0;
  const shotFrame=shot?Math.max(0,frame-Math.round(shot.start*fps)):0;
  const shotDuration=shot?Math.max(.1,shot.end-shot.start):5;
  const localMotionTime=shotFrame/fps;
  const motion=inferMotion(action);
  const travel=motion==="run"?Math.min(3.2,localMotionTime*2.7):motion==="walk"?Math.min(3.2,localMotionTime*1.15):0;
+ const cameraHint=(shot?.camera||"").toLowerCase();
+ const closeCamera=/close|close-up|rosto|detalhe|reaction/i.test(cameraHint);
+ const aerialCamera=/aerial|drone|overhead|a[eé]rea|alto/i.test(cameraHint);
+ useFrame(()=>{
+   const target=new THREE.Vector3(actorX,closeCamera?1.8:1.35,-travel);
+   const desired=new THREE.Vector3(actorX,aerialCamera?10:closeCamera?2.9:4.15,(closeCamera?6.8:aerialCamera?13:10.5)-travel);
+   camera.position.lerp(desired,.12);
+   camera.lookAt(target);
+ });
  return <>
   <color attach="background" args={[sky]}/>
   <fog attach="fog" args={[sky,17,48]}/>
