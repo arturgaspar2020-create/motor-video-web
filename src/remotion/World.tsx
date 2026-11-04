@@ -93,7 +93,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const seconds=frame/fps;
  const shot=shots.find((item,index)=>seconds>=item.start&&(seconds<item.end||index===shots.length-1))||shots[shots.length-1];
  const expression=shot?.expression||"";
- const action=(shot?.action||shot?.animation||"").toLowerCase();
+ const action=((shot?.action||"")+" "+(shot?.animation||"")).toLowerCase();
  const environment=(shot?.environment||shot?.scene_name||"").toLowerCase();
  const isNight=/night|noite|escuro|dark|nacht|dunkel/i.test(environment+" "+(shot?.lighting||""));
  const isDesert=/desert|deserto|sand|areia|wueste|wüste/i.test(environment);
