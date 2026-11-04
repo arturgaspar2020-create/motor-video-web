@@ -1,8 +1,9 @@
 import React, {Suspense, useLayoutEffect, useMemo} from "react";
+import {useFrame, useThree} from "@react-three/fiber";
 import {useGLTF} from "@react-three/drei";
 import * as THREE from "three";
 import {clone as cloneSkeleton} from "three/examples/jsm/utils/SkeletonUtils.js";
-import {useCurrentFrame, useVideoConfig, interpolate} from "remotion";
+import {useCurrentFrame, useVideoConfig} from "remotion";
 import type {Shot} from "./Video";
 import {inferMotion, motionProgress} from "./motion";
 
@@ -48,12 +49,18 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
    <mesh position={[-.24,1.58,-.29]} rotation={[0,0,-.22]}><boxGeometry args={[.09,.8,.08]}/><meshStandardMaterial color="#bd9360"/></mesh>
    <mesh position={[.24,1.58,-.29]} rotation={[0,0,.22]}><boxGeometry args={[.09,.8,.08]}/><meshStandardMaterial color="#bd9360"/></mesh>
    {[-1,1].map((side,i)=><group key={side} position={[side*.53,1.92,0]} rotation={i===0?armLeft:armRight}>
-     <mesh position={[0,-.32,0]} castShadow><capsuleGeometry args={[.135,.55,4,9]}/><meshStandardMaterial color="#b96b43"/></mesh>
-     <mesh position={[0,-.68,0]} castShadow><sphereGeometry args={[.145,12,10]}/><meshStandardMaterial color="#d8a47e"/></mesh>
+     <mesh position={[0,-.22,0]} castShadow><capsuleGeometry args={[.125,.38,4,9]}/><meshStandardMaterial color="#b96b43"/></mesh>
+     <group position={[0,-.43,0]} rotation={[walking?swing*.42:reacting?-.35:0,0,0]}>
+       <mesh position={[0,-.2,0]} castShadow><capsuleGeometry args={[.105,.34,4,9]}/><meshStandardMaterial color="#b96b43"/></mesh>
+       <mesh position={[0,-.43,.015]} castShadow><sphereGeometry args={[.12,12,10]}/><meshStandardMaterial color="#d8a47e"/></mesh>
+     </group>
    </group>)}
-   {[-1,1].map((side,i)=><group key={side} position={[side*.22,1.02,0]} rotation={[i===0?swing:-swing,0,0]}>
-     <mesh position={[0,-.42,0]} castShadow><capsuleGeometry args={[.16,.66,4,9]}/><meshStandardMaterial color="#263447"/></mesh>
-     <mesh position={[0,-.83,.12]} castShadow><boxGeometry args={[.34,.2,.52]}/><meshStandardMaterial color="#171f2a"/></mesh>
+   {[-1,1].map((side,i)=><group key={side} position={[side*.22,1.02,0]} rotation={[sitting?-1.05:crouching?-.72:(i===0?swing:-swing),0,0]}>
+     <mesh position={[0,-.24,0]} castShadow><capsuleGeometry args={[.145,.38,4,9]}/><meshStandardMaterial color="#263447"/></mesh>
+     <group position={[0,-.46,0]} rotation={[sitting ? 1.35 : crouching ? .85 : Math.max(0,Math.sin(t*(running?8:5.8)))*.65,0,0]}>
+       <mesh position={[0,-.22,0]} castShadow><capsuleGeometry args={[.13,.38,4,9]}/><meshStandardMaterial color="#263447"/></mesh>
+       <mesh position={[0,-.45,.13]} castShadow><boxGeometry args={[.31,.16,.48]}/><meshStandardMaterial color="#171f2a"/></mesh>
+     </group>
    </group>)}
  </group>;
 };
@@ -71,12 +78,22 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string;du
  },[gltf.scene]);
  const mixer=useMemo(()=>new THREE.AnimationMixer(model),[model]);
  const selected=useMemo(()=>{
-   const hint=action.toLowerCase();
-   return gltf.animations.find(clip=>/run|renn|lauf/i.test(hint)&&/run|sprint/i.test(clip.name))
-     ||gltf.animations.find(clip=>/walk|geh|wander/i.test(hint)&&/walk/i.test(clip.name))
-     ||gltf.animations.find(clip=>/idle|stand|breath/i.test(clip.name))
-     ||gltf.animations[0];
- },[gltf.animations,action]);
+   const hint=inferMotion(action);
+   if(hint==="run") return gltf.animations.find(clip=>/run|sprint|jog/i.test(clip.name));
+   if(hint==="walk") return gltf.animations.find(clip=>/walk|gehen/i.test(clip.name));
+   if(hint==="sit") return gltf.animations.find(clip=>/sit|sitting/i.test(clip.name));
+   if(hint==="jump") return gltf.animations.find(clip=>/jump/i.test(clip.name));
+   if(hint==="wave") return gltf.animations.find(clip=>/wave/i.test(clip.name));
+   if(hint==="turn") return gltf.animations.find(clip=>/turn|rotate/i.test(clip.name));
+   if(hint==="look") return gltf.animations.find(clip=>/look|inspect/i.test(clip.name));
+   if(hint==="react") return gltf.animations.find(clip=>/react|surprise|flinch/i.test(clip.name));
+   if(hint==="open") return gltf.animations.find(clip=>/open|door/i.test(clip.name));
+   if(hint==="close") return gltf.animations.find(clip=>/close/i.test(clip.name));
+   if(hint==="pickup") return gltf.animations.find(clip=>/pick|grab|take/i.test(clip.name));
+   if(hint==="drop") return gltf.animations.find(clip=>/drop|throw/i.test(clip.name));
+   if(hint==="idle") return gltf.animations.find(clip=>/idle|stand|breath/i.test(clip.name));
+   return undefined;
+  },[gltf.animations,action]);
  useLayoutEffect(()=>{
    mixer.stopAllAction();
    if(selected){mixer.clipAction(selected).play();}
@@ -86,7 +103,7 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string;du
    mixer.setTime(frame/fps);
    model.updateMatrixWorld(true);
  },[mixer,frame,fps,model]);
- return <primitive object={model} position={[0,0,0]} />;
+ return selected ? <primitive object={model} position={[0,0,0]} /> : <Character frame={frame} fps={fps} action={action} duration={duration}/>;
 };
 
 const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;action:string}> = ({label,index,frame,fps,action}) => {
@@ -94,6 +111,10 @@ const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;acti
  const x=(index%3-1)*1.35+.9, z=.25+Math.floor(index/3)*.65;
  const t=frame/fps;
  const progress=motionProgress(t,1.2);
+ const picking=/pickup|pick|grab|peg|apanh|take|nimmt/i.test(action);
+ const dropping=/drop|derrub|cai|throw|fällt|fiel/i.test(action);
+ const heldBlend=picking?progress:dropping?1-progress:0;
+ const itemX=x+(.48-x)*heldBlend, itemY=.12+1.3*heldBlend, itemZ=z+(.15-z)*heldBlend;
  if(/^(road|path|trilha|estrada|caminho|trail)$/.test(name)) return null;
  if(/backpack|mochila|rucksack/.test(name)) return <group position={[x,.55,z]} rotation={[0,Math.sin(t*.8)*.025,0]}><mesh castShadow position={[0,.12,0]}><boxGeometry args={[.58,.78,.32]}/><meshStandardMaterial color="#76513a" roughness={.95}/></mesh><mesh position={[0,.48,-.02]}><boxGeometry args={[.42,.22,.3]}/><meshStandardMaterial color="#9a704b"/></mesh><mesh position={[-.23,.1,.18]} rotation={[0,0,-.12]}><boxGeometry args={[.08,.62,.08]}/><meshStandardMaterial color="#49382c"/></mesh><mesh position={[.23,.1,.18]} rotation={[0,0,.12]}><boxGeometry args={[.08,.62,.08]}/><meshStandardMaterial color="#49382c"/></mesh></group>;
  if(/rock|stone|pedra|rocha/.test(name)) return <mesh position={[x,.28,z]} rotation={[.2,.5,.1]} castShadow><icosahedronGeometry args={[.42,1]}/><meshStandardMaterial color="#77766f" roughness={1}/></mesh>;
@@ -104,10 +125,10 @@ const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;acti
  if(/stairs|staircase|escadas|escadaria|treppe/.test(name)) return <group position={[x,0,z]}>{Array.from({length:6},(_,i)=><mesh key={i} position={[0,.18+i*.22,-i*.42]} castShadow><boxGeometry args={[1.8,.36,.46]}/><meshStandardMaterial color="#72543b"/></mesh>)}</group>;
  if(/window|janela|fenster/.test(name)) return <group position={[x,2,z]}><mesh><boxGeometry args={[1.35,1.35,.12]}/><meshStandardMaterial color="#543d2b"/></mesh><mesh position={[0,0,.08]}><boxGeometry args={[1.15,1.15,.025]}/><meshStandardMaterial color="#7795a5" transparent opacity={.48}/></mesh><mesh position={[.3,0,.15]} rotation={[0,/open|abr|öffnet|oeff/i.test(action)?progress*-.9:0,0]}><boxGeometry args={[.55,1.1,.045]}/><meshStandardMaterial color="#76553a"/></mesh></group>;
  if(/clock|watch|rel[oó]gio|uhr/.test(name)) return <group position={[x,2,z]}><mesh><cylinderGeometry args={[.42,.42,.12,24]}/><meshStandardMaterial color="#3b3028"/></mesh><mesh rotation={[Math.PI/2,0,0]} position={[0,0,.08]}><torusGeometry args={[.34,.025,8,24]}/><meshStandardMaterial color="#e6d6b3"/></mesh><mesh position={[.02,.12,.1]}><boxGeometry args={[.025,.22,.018]}/><meshStandardMaterial color="#f5e9ce"/></mesh><mesh position={[.1,0,.11]} rotation={[0,0,-t*.5]}><boxGeometry args={[.2,.018,.018]}/><meshStandardMaterial color="#f5e9ce"/></mesh></group>;
- if(/map|karte|carta|paper|papel|book|livro|document/.test(name)) return <group position={[x,1.55,z]} rotation={[.12,0,Math.sin(t)*.025]}><mesh castShadow><boxGeometry args={[.65,.035,.82]}/><meshStandardMaterial color="#e6d4a6"/></mesh><mesh position={[0,.025,0]}><boxGeometry args={[.48,.008,.62]}/><meshStandardMaterial color="#b49a67"/></mesh></group>;
- if(/lantern|lanterna|torch|tocha|taschenlampe|laterne/.test(name)) return <group position={[x,.8,z]}><mesh castShadow><cylinderGeometry args={[.16,.19,.38,12]}/><meshStandardMaterial color="#a66b32" metalness={0.5}/></mesh><mesh position={[0,.28,0]}><sphereGeometry args={[.13,12,10]}/><meshStandardMaterial color="#ffb24c" emissive="#ff8c22" emissiveIntensity={2}/></mesh><pointLight position={[0,.35,0]} color="#ff9c43" intensity={2.5} distance={5}/></group>;
+ if(/map|karte|carta|paper|papel|book|livro|document/.test(name)) return <group position={[itemX,itemY,itemZ]} rotation={[.12,0,Math.sin(t)*.025]}><mesh castShadow><boxGeometry args={[.65,.035,.82]}/><meshStandardMaterial color="#e6d4a6"/></mesh><mesh position={[0,.025,0]}><boxGeometry args={[.48,.008,.62]}/><meshStandardMaterial color="#b49a67"/></mesh></group>;
+ if(/flashlight|lantern|lanterna|torch|tocha|taschenlampe|laterne/.test(name)) return <group position={[itemX,.8+.65*heldBlend,itemZ]}><mesh castShadow><cylinderGeometry args={[.16,.19,.38,12]}/><meshStandardMaterial color="#a66b32" metalness={0.5}/></mesh><mesh position={[0,.28,0]}><sphereGeometry args={[.13,12,10]}/><meshStandardMaterial color="#ffb24c" emissive="#ff8c22" emissiveIntensity={2}/></mesh><pointLight position={[0,.35,0]} color="#ff9c43" intensity={2.5} distance={5}/></group>;
  if(/sword|espada|knife|faca|schwert/.test(name)) return <group position={[x,.9,z]} rotation={[0,0,-.45]}><mesh castShadow position={[0,.55,0]}><boxGeometry args={[.09,1.1,.045]}/><meshStandardMaterial color="#c7d4df" metalness={0.8} roughness={0.25}/></mesh><mesh position={[0,-.05,0]}><cylinderGeometry args={[.045,.045,.28,8]}/><meshStandardMaterial color="#60402b"/></mesh></group>;
- if(/key|chave|schluessel|schlüssel/.test(name)) return <group position={[x,1,z]}><mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[.16,.035,8,16]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh><mesh position={[.23,0,0]}><boxGeometry args={[.4,.06,.05]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
+ if(/key|chave|schluessel|schlüssel/.test(name)) return <group position={[itemX,itemY,itemZ]}><mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[.16,.035,8,16]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh><mesh position={[.23,0,0]}><boxGeometry args={[.4,.06,.05]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
  if(/door|porta|tuer|tür/.test(name)) return <group position={[x,1.2,z]} rotation={[0,/open|opened|abr|abert|oeff|öffnet/i.test(action)?progress*1.15:/close|closed|fech|schließ/i.test(action)?(1-progress)*1.15:0,0]}><mesh castShadow><boxGeometry args={[1.1,2.4,.12]}/><meshStandardMaterial color="#69452e"/></mesh><mesh position={[.38,0,.09]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
  return null;
 };
@@ -115,6 +136,7 @@ const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;acti
 export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const frame=useCurrentFrame();
  const {fps}=useVideoConfig();
+ const {camera}=useThree();
  const seconds=frame/fps;
  const shot=shots.find((item,index)=>seconds>=item.start&&(seconds<item.end||index===shots.length-1))||shots[shots.length-1];
  const expression=shot?.expression||"";
@@ -126,18 +148,27 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const isDesert=/desert|deserto|sand|areia|wueste|wüste/i.test(environment);
  const isSnow=/snow|neve|gelo|ice|schnee|eis/i.test(environment);
  const isCity=/city|cidade|street|rua|urban|urbano|stadt/i.test(environment);
- const isInterior=/inside|interior|room|quarto|casa|office|escritório|zimmer|innenraum|haus|huette|hütte/i.test(environment);
+ const isInterior=/inside|interior|room|quarto|casa|cabana|cabin|hut|cottage|office|escritório|zimmer|innenraum|haus|huette|hütte/i.test(environment);
  const isWar=/war|batalha|battle|ruins|ruínas|krieg|schlacht/i.test(environment);
  const isOcean=/ocean|sea|mar|oceano|lake|lago|meer|see/i.test(environment);
- const ground=isSnow?"#cbd5df":isDesert?"#a98a58":"#52634c";
+ const isRiver=/river|rio|stream|ribeiro/i.test(environment);
+ const ground=isSnow?"#cbd5df":isInterior?"#554b40":isCity?"#666b70":isWar?"#5a554d":isDesert?"#a98a58":"#52634c";
  const sky=isNight?"#101b34":isSnow?"#aebdca":"#91a9bd";
  const t=frame/fps;
- const shotProgress=shot?interpolate(seconds,[shot.start,Math.max(shot.start+.001,shot.end)],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp"}):0;
  const shotFrame=shot?Math.max(0,frame-Math.round(shot.start*fps)):0;
  const shotDuration=shot?Math.max(.1,shot.end-shot.start):5;
  const localMotionTime=shotFrame/fps;
  const motion=inferMotion(action);
  const travel=motion==="run"?Math.min(3.2,localMotionTime*2.7):motion==="walk"?Math.min(3.2,localMotionTime*1.15):0;
+ const cameraHint=(shot?.camera||"").toLowerCase();
+ const closeCamera=/close|close-up|rosto|detalhe|reaction/i.test(cameraHint);
+ const aerialCamera=/aerial|drone|overhead|a[eé]rea|alto/i.test(cameraHint);
+ useFrame(()=>{
+   const target=new THREE.Vector3(actorX,closeCamera?1.8:1.35,-travel);
+   const desired=new THREE.Vector3(actorX,aerialCamera?10:closeCamera?2.9:4.15,(closeCamera?6.8:aerialCamera?13:10.5)-travel);
+   camera.position.lerp(desired,.12);
+   camera.lookAt(target);
+ });
  return <>
   <color attach="background" args={[sky]}/>
   <fog attach="fog" args={[sky,17,48]}/>
@@ -147,8 +178,9 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   {isNight && <pointLight position={[0,3,2]} color="#ffb36b" intensity={1.2} distance={10}/>}
   <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.05,0]} receiveShadow><planeGeometry args={[100,100]}/><meshStandardMaterial color={ground} roughness={1}/></mesh>
   {isOcean && <mesh rotation={[-Math.PI/2,0,0]} position={[0,.015,-8]}><planeGeometry args={[100,45]}/><meshStandardMaterial color="#24647a" metalness={0.25} roughness={0.28}/></mesh>}
+  {isRiver && <group><mesh rotation={[-Math.PI/2,0,0]} position={[0,.018,-5]}><planeGeometry args={[3.2,100]}/><meshStandardMaterial color="#286b85" metalness={0.18} roughness={0.24}/></mesh>{Array.from({length:18},(_,i)=><mesh key={i} rotation={[-Math.PI/2,0,0]} position={[Math.sin(i*2.4)*.9,.025,-35+i*3.5]}><planeGeometry args={[.55,.035]}/><meshStandardMaterial color="#8fc4d1" transparent opacity={.38}/></mesh>)}</group>}
   {!isCity&&!isInterior&&!isOcean && Array.from({length:9},(_,i)=><mesh key={i} position={[-13+i*3.3,2.5+(i%3)*.8,-13-(i%2)*2]} rotation={[0,i*.5,0]} castShadow><coneGeometry args={[2.8,5+(i%3)*1.2,5]}/><meshStandardMaterial color={isSnow?"#687b8b":"#536d79"} roughness={1}/></mesh>)}
-  {!isCity&&!isInterior&&!isDesert&&!isOcean && Array.from({length:16},(_,i)=><group key={i} rotation={[0,0,Math.sin(t*1.4+i)*.025]}><Tree x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/></group>)}
+  {!isCity&&!isInterior&&!isWar&&!isDesert&&!isOcean && Array.from({length:16},(_,i)=><group key={i} rotation={[0,0,Math.sin(t*1.4+i)*.025]}><Tree x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/></group>)}
   {isCity && Array.from({length:10},(_,i)=><mesh key={i} position={[-11+i*2.5,1.7+(i%3)*.7,-8-(i%2)*3]} castShadow><boxGeometry args={[1.8,3.4+(i%3)*1.4,1.8]}/><meshStandardMaterial color={i%2?"#536171":"#777c82"} roughness={0.95}/></mesh>)}
   {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}

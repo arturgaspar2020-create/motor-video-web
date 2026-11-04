@@ -115,6 +115,8 @@ if(sceneDurations.some(value=>!Number.isFinite(value)||value<=0)) throw new Erro
 const shots=[]; let cursor=0;
 scenes.forEach((scene,index)=>{
   const sentences=scene.narration.split(/(?<=[.!?…])\s+/).map(value=>value.trim()).filter(Boolean);
+  const sceneAction=(scene.directives.acao||scene.directives.movimento||[]).at(-1)||"";
+  const sceneAnimation=(scene.directives.animacao||[]).at(-1)||sceneAction;
   const words=sentences.map(value=>(value.match(/\S+/g)||[]).length);
   const sceneWords=words.reduce((a,b)=>a+b,0)||1;
   sentences.forEach((sentence,shotIndex)=>{
@@ -123,8 +125,8 @@ scenes.forEach((scene,index)=>{
     shots.push({
       id:"S"+String(index+1).padStart(3,"0")+"-P"+String(shotIndex+1).padStart(2,"0"),
       scene_id:index+1,scene_name:scene.name,scene_type:scene.type,narration:sentence,
-      action:inferAction(sentence) || (d.acao||d.movimento||[]).at(-1)||"",
-      animation:inferAction(sentence) || (d.animacao||[]).at(-1)||"",
+      action:inferAction(sentence) || (shotIndex===0 ? sceneAction : ""),
+      animation:inferAction(sentence) || (shotIndex===0 ? sceneAnimation : ""),
       expression:(d.expressao||[]).at(-1)||"",
       environment:(d.ambiente||[]).at(-1)||"",
       lighting:(d.luz||[]).at(-1)||"",
