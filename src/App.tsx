@@ -134,11 +134,11 @@ export default function App() {
     </header>
     <main>
       <div className="intro">
-        <div><label>ESTÚDIO DE PRODUÇÃO AUTOMÁTICA</label><h1>Transforme seu roteiro<br/><em>em uma produção visual.</em></h1><p>Organize cenas, narração e gere seu primeiro MP4 localmente.</p></div>
+        <div><label>ESTÚDIO DE PRODUÇÃO AUTOMÁTICA</label><h1>Transforme seu roteiro<br/><em>em uma produção visual.</em></h1><p>Crie cenas 2D procedurais, adicione narração e exporte MP4 localmente. Animação 3D real ainda está em desenvolvimento.</p></div>
         <div className="stats"><b>{project.scenes.length}<small>CENAS</small></b><b>{project.scenes.reduce((n, s) => n + countWords(s.narration), 0)}<small>PALAVRAS</small></b><b>{project.scenes.filter(s => s.narration).length}<small>COM NARRAÇÃO</small></b></div>
       </div>
       <div className="grid">
-        <section className="panel"><h2>✎ ROTEIRO</h2><textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/><div className="muted">Use [cena: tipo | nome] para iniciar cada cena. Assets locais: [asset: media/imagem.jpg]. Duração opcional: [duracao: 8].</div></section>
+        <section className="panel"><h2>✎ ROTEIRO</h2><textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/><div className="muted">Use [cena: tipo | nome] para iniciar cada cena. Sem [asset], o motor cria uma animação procedural 2D básica. Com [asset: media/imagem.jpg], usa seu arquivo. Duração opcional: [duracao: 8].</div></section>
         <section className="panel">
           <h2>▣ PRÉ-VISUALIZAÇÃO <span className="live">ESTRUTURAL</span></h2>
           <div className={"preview " + (ratio === "9:16" ? "vertical" : "")}><div className="sceneLabel">CENA {String(scene?.id || 0).padStart(2, "0")}</div><div className="center"><div className="play">▶</div><b>{scene?.name || "Adicione uma cena ao roteiro"}</b><small>{scene?.type || "Aguardando conteúdo"}</small></div><div className="bottom">{ratio} · {fps} FPS</div></div>
