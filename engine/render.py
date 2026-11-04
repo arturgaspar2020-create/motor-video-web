@@ -19,6 +19,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from procedural import render_procedural_scene
+
 SCENE_RE = re.compile(r"^\[cena:\s*([^\]|]+)(?:\|\s*([^\]]+))?\]$", re.I)
 MARKER_RE = re.compile(r"^\[([a-zA-ZÀ-ÿ_-]+)\s*:\s*(.*?)\]$")
 WORD_RE = re.compile(r"\S+")
@@ -188,15 +190,11 @@ def main() -> int:
                 segment = temp / f"scene_{index:04d}.mp4"
                 frames = max(1, round(duration * args.fps))
                 if asset is None:
-                    # A deliberate placeholder slate, not a fabricated scene.
-                    # Keep the no-asset fallback independent of Fontconfig. Some
-                    # Windows FFmpeg builds ship without a usable Fontconfig config,
-                    # which makes drawtext fail before an MP4 can be produced.
-                    run(["ffmpeg", "-y", "-f", "lavfi", "-i",
-                         f"color=c=0x17263d:s={args.width}x{args.height}:r={args.fps}:d={duration:.4f}",
-                         "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
-                         "-r", str(args.fps), str(segment)])
-                    print(f"Cena {index}: cartão de identificação (sem asset visual).")
+                    # Automatic procedural 2D block-character animation.
+                    # This is an honest first visual prototype, not full 3D.
+                    render_procedural_scene(scene, segment, duration, args.width,
+                                            args.height, args.fps, temp, index)
+                    print(f"Cena {index}: animação procedural 2D (sem asset externo).")
                 else:
                     suffix = asset.suffix.lower()
                     if suffix in (".mp4", ".mov", ".mkv", ".webm", ".avi"):
@@ -228,7 +226,7 @@ def main() -> int:
         print(f"Cenas: {len(scenes)} | Resolução: {args.width}x{args.height} | FPS: {args.fps}")
         print(f"Áudio: {audio_duration:.2f}s | Soma das cenas: {total_video:.2f}s")
         print(f"Tempos: {duration_mode}")
-        print("NOTA: renderizador inicial 2D/ vídeo. GLB/3D animado ainda não é renderizado nesta versão.")
+        print("NOTA: cenas sem asset usam animação procedural 2D de bonecos blocados; modelos GLB e animação 3D real ainda não estão integrados.")
         return 0
     except Exception as exc:
         print(f"\nFALHA NO RENDER: {exc}", file=sys.stderr)
