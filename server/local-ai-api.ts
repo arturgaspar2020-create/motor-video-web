@@ -25,6 +25,7 @@ function parseScenes(script: string): SceneInput[] {
       continue;
     }
     if (!current || !value) continue;
+    if (/^\[shot:\s*\{/i.test(value)) continue;
     if (/^\[[^\]]+\]$/.test(value)) current.directives.push(value);
     else current.narration += (current.narration ? "\n" : "") + value;
   }
@@ -60,6 +61,7 @@ function applyShotMarkers(script: string, scenes: SceneInput[], plans: ShotPlan[
       output.push(line);
       continue;
     }
+    if (sceneIndex >= 0 && /^\[shot:\s*\{/i.test(value)) { flushNarration(); continue; }
     if (sceneIndex >= 0 && /^\[[^\]]+\]$/.test(value)) {
       flushNarration();
       if (!/^\[shot:/i.test(value)) output.push(line);
