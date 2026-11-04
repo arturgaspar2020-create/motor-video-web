@@ -1,6 +1,7 @@
 import React, {Suspense, useEffect, useMemo} from "react";
 import {useGLTF} from "@react-three/drei";
 import * as THREE from "three";
+import {clone as cloneSkeleton} from "three/examples/jsm/utils/SkeletonUtils.js";
 import {useCurrentFrame, useVideoConfig, interpolate} from "remotion";
 import type {Shot} from "./Video";
 
@@ -33,7 +34,8 @@ const Character:React.FC<{frame:number;fps:number;action:string}> = ({frame,fps,
 
 const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> = ({url,frame,fps,action}) => {
  const gltf=useGLTF(url);
- const mixer=useMemo(()=>new THREE.AnimationMixer(gltf.scene),[gltf.scene]);
+ const model=useMemo(()=>{\n   const copy=cloneSkeleton(gltf.scene);\n   const box=new THREE.Box3().setFromObject(copy);\n   const size=box.getSize(new THREE.Vector3());\n   const scale=size.y>0?2.75/size.y:1;\n   copy.scale.setScalar(scale);\n   copy.position.y-=box.min.y*scale;\n   return copy;\n },[gltf.scene]);
+ const mixer=useMemo(()=>new THREE.AnimationMixer(model),[model]);
  const selected=useMemo(()=>{
    const hint=action.toLowerCase();
    return gltf.animations.find(clip=>hint.includes("run")&&/run/i.test(clip.name))
@@ -49,8 +51,8 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> 
  useEffect(()=>{
    mixer.setTime(frame/fps);
    gltf.scene.updateMatrixWorld(true);
- },[mixer,frame,fps,gltf.scene]);
- return <primitive object={gltf.scene} position={[0,0,0]} />;
+ },[mixer,frame,fps,model]);
+ return <primitive object={model} position={[0,0,0]} />;
 };
 
 export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
