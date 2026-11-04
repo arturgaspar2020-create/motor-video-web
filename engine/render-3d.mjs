@@ -37,20 +37,20 @@ function probeDuration(file) {
 }
 function inferAction(text) {
   const rules = [
-    ["running", /\\b(run|runs|running|ran|sprint|corr(?:e|eu|endo|er)|fug(?:e|iu|indo|ir)|rennt|rennen|sprintet)\\b/i],
-    ["walking", /\\b(walk|walks|walking|walked|caminh(?:a|ou|ando|ar)|and(?:a|ou|ando)|geht|ging|wandert)\\b/i],
-    ["opening", /\\b(open|opens|opened|opening|abr(?:e|iu|indo|ir)|öffnet|öffnete|oeffnet)\\b/i],
-    ["closing", /\\b(close|closes|closed|closing|fech(?:a|ou|ando|ar)|schließt|schloss)\\b/i],
-    ["picking up", /\\b(pick(?:s)? up|picked up|grab(?:s|bed)?|take(?:s)?|took|peg(?:a|ou|ando)|apanh(?:a|ou|ando)|nimmt|nahm)\\b/i],
-    ["dropping", /\\b(drop(?:s|ped)?|falls?|fell|falling|derrub(?:a|ou|ando)|cai(?:u|ndo)|fällt|fiel)\\b/i],
-    ["sitting", /\\b(sit(?:s|ting)?|sat|senta(?:-se|r)?|sentou|sentado|setzt sich|saß)\\b/i],
-    ["standing", /\\b(stand(?:s|ing)?|stood|levanta(?:-se|r)?|levantou|aufstehen|steht auf)\\b/i],
-    ["jumping", /\\b(jump(?:s|ed|ing)?|salta(?:r|ou|ndo)?|pula(?:r|ou|ndo)?|springt|sprang)\\b/i],
-    ["turning", /\\b(turn(?:s|ed|ing)?|vira(?:-se|r)?|virou|gira(?:r|ou)?|dreht sich|drehte sich)\\b/i],
-    ["looking", /\\b(look(?:s|ed|ing)?|watch(?:es|ed)?|observ(?:a|ou|ando)|olha(?:r|ou|ndo)?|encara|blickt|sieht)\\b/i],
-    ["reacting", /\\b(hear(?:s|d|ing)?|heard|sound|noise|barulho|ru[ií]do|assust(?:a|ou|ado)|surpris(?:e|ed)|startl(?:e|ed)|reag(?:e|iu|indo)|erschrickt)\\b/i],
-    ["pointing", /\\b(point(?:s|ed|ing)?|apont(?:a|ou|ando)|zeigt|deutet)\\b/i],
-    ["waving", /\\b(wav(?:e|es|ed|ing)|acen(?:a|ou|ando)|winkt)\\b/i]
+    ["running", /\b(run|runs|running|ran|sprint|corr(?:e|eu|endo|er)|fug(?:e|iu|indo|ir)|rennt|rennen|sprintet)\b/i],
+    ["walking", /\b(walk|walks|walking|walked|caminh(?:a|ou|ando|ar)|and(?:a|ou|ando)|geht|ging|wandert)\b/i],
+    ["opening", /\b(open|opens|opened|opening|abr(?:e|iu|indo|ir)|öffnet|öffnete|oeffnet)\b/i],
+    ["closing", /\b(close|closes|closed|closing|fech(?:a|ou|ando|ar)|schließt|schloss)\b/i],
+    ["picking up", /\b(pick(?:s)? up|picked up|grab(?:s|bed)?|take(?:s)?|took|peg(?:a|ou|ando)|apanh(?:a|ou|ando)|nimmt|nahm)\b/i],
+    ["dropping", /\b(drop(?:s|ped)?|falls?|fell|falling|derrub(?:a|ou|ando)|cai(?:u|ndo)|fällt|fiel)\b/i],
+    ["sitting", /\b(sit(?:s|ting)?|sat|senta(?:-se|r)?|sentou|sentado|setzt sich|saß)\b/i],
+    ["standing", /\b(stand(?:s|ing)?|stood|levanta(?:-se|r)?|levantou|aufstehen|steht auf)\b/i],
+    ["jumping", /\b(jump(?:s|ed|ing)?|salta(?:r|ou|ndo)?|pula(?:r|ou|ndo)?|springt|sprang)\b/i],
+    ["turning", /\b(turn(?:s|ed|ing)?|vira(?:-se|r)?|virou|gira(?:r|ou)?|dreht sich|drehte sich)\b/i],
+    ["looking", /\b(look(?:s|ed|ing)?|watch(?:es|ed)?|observ(?:a|ou|ando)|olha(?:r|ou|ndo)?|encara|blickt|sieht)\b/i],
+    ["reacting", /\b(hear(?:s|d|ing)?|heard|sound|noise|barulho|ru[ií]do|assust(?:a|ou|ado)|surpris(?:e|ed)|startl(?:e|ed)|reag(?:e|iu|indo)|erschrickt)\b/i],
+    ["pointing", /\b(point(?:s|ed|ing)?|apont(?:a|ou|ando)|zeigt|deutet)\b/i],
+    ["waving", /\b(wav(?:e|es|ed|ing)|acen(?:a|ou|ando)|winkt)\b/i]
   ];
   for (const [action, pattern] of rules) if (pattern.test(text)) return action;
   return "";
@@ -62,24 +62,32 @@ function inferCamera(text, fallback) {
   if (/look|olha|observ|vê|see|sieht/i.test(text)) return "over-the-shoulder point of view";
   return fallback || "cinematic medium shot";
 }
+function normalizeWords(value) {
+  return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+function splitObjectLabels(values) {
+  return values.flatMap(value => String(value || "").split(/[,;\n]+|\s+e\s+/i).map(item => item.trim()).filter(Boolean));
+}
 function inferObjects(text) {
-  const objects = [];
+  const source = normalizeWords(text);
   const rules = [
-    ["clock", /clock|watch|rel[oó]gio|horas|uhr/i],
-    ["door", /door|porta|port[aã]o|t[uü]r/i],
-    ["window", /window|janela|fenster/i],
-    ["flashlight", /flashlight|lantern|lanterna|torch|tocha|laterne|taschenlampe/i],
-    ["photo", /photo|photograph|picture|fotografia|foto|imagem/i],
-    ["bed", /bed|cama|bett/i],
-    ["stairs", /stairs|staircase|escadas|escadaria|treppe/i],
-    ["car", /car|vehicle|carro|autom[oó]vel|auto/i],
-    ["tree", /tree|[aá]rvore|[aá]rvores|baum/i],
-    ["map", /map|mapa|karte/i],
-    ["key", /key|chave|schl[uü]ssel/i],
-    ["book", /book|livro|buch/i]
+    ["clock", /\b(clock|watch|relogio|horas|uhr)\b/],
+    ["door", /\b(door|porta|portao|tur)\b/],
+    ["window", /\b(window|janela|fenster)\b/],
+    ["flashlight", /\b(flashlight|lantern|lanterna|torch|tocha|laterne|taschenlampe)\b/],
+    ["photo", /\b(photo|photograph|picture|fotografia|foto|imagem)\b/],
+    ["bed", /\b(bed|cama|bett)\b/],
+    ["stairs", /\b(stairs|staircase|escadas|escadaria|treppe)\b/],
+    ["car", /\b(car|vehicle|carro|automovel|auto)\b/],
+    ["tree", /\b(tree|arvore|arvores|baum|baeume)\b/],
+    ["backpack", /\b(backpack|mochila|rucksack)\b/],
+    ["rock", /\b(rock|stone|pedra|rocha|stein)\b/],
+    ["river", /\b(river|rio|stream|ribeiro)\b/],
+    ["map", /\b(map|mapa|karte)\b/],
+    ["key", /\b(key|chave|schlussel)\b/],
+    ["book", /\b(book|livro|buch)\b/]
   ];
-  for (const [name, pattern] of rules) if (pattern.test(text)) objects.push(name);
-  return objects;
+  return rules.filter(([, pattern]) => pattern.test(source)).map(([name]) => name);
 }
 function parseScript(source) {
   const scenes=[]; let current=null; const warnings=[];
@@ -121,7 +129,7 @@ scenes.forEach((scene,index)=>{
       environment:(d.ambiente||[]).at(-1)||"",
       lighting:(d.luz||[]).at(-1)||"",
       camera:inferCamera(sentence,(d.camera||[]).at(-1)||""),
-      objects:[...new Set([...(d.elementos||[]),...(d.objetos||[]),...inferObjects(sentence)])],
+      objects:[...new Set([...splitObjectLabels([...(d.elementos||[]),...(d.objetos||[])]),...inferObjects(sentence)])],
       position:(d.posicao||d.posicoes||[]).at(-1)||"",
       start:Number(cursor.toFixed(4)),end:Number((cursor+duration).toFixed(4)),duration:Number(duration.toFixed(4))
     });

@@ -90,10 +90,15 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string;du
 };
 
 const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;action:string}> = ({label,index,frame,fps,action}) => {
- const name=label.toLowerCase();
+ const name=label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
  const x=(index%3-1)*1.35+.9, z=.25+Math.floor(index/3)*.65;
  const t=frame/fps;
  const progress=motionProgress(t,1.2);
+ if(/^(road|path|trilha|estrada|caminho|trail)$/.test(name)) return null;
+ if(/backpack|mochila|rucksack/.test(name)) return <group position={[x,.55,z]} rotation={[0,Math.sin(t*.8)*.025,0]}><mesh castShadow position={[0,.12,0]}><boxGeometry args={[.58,.78,.32]}/><meshStandardMaterial color="#76513a" roughness={.95}/></mesh><mesh position={[0,.48,-.02]}><boxGeometry args={[.42,.22,.3]}/><meshStandardMaterial color="#9a704b"/></mesh><mesh position={[-.23,.1,.18]} rotation={[0,0,-.12]}><boxGeometry args={[.08,.62,.08]}/><meshStandardMaterial color="#49382c"/></mesh><mesh position={[.23,.1,.18]} rotation={[0,0,.12]}><boxGeometry args={[.08,.62,.08]}/><meshStandardMaterial color="#49382c"/></mesh></group>;
+ if(/rock|stone|pedra|rocha/.test(name)) return <mesh position={[x,.28,z]} rotation={[.2,.5,.1]} castShadow><icosahedronGeometry args={[.42,1]}/><meshStandardMaterial color="#77766f" roughness={1}/></mesh>;
+ if(/tree|arvore|arvores|baum/.test(name)) return <Tree x={x} z={z} scale={1.15}/>;
+ if(/car|vehicle|carro|automovel|auto/.test(name)) return <group position={[x,.62,z]} rotation={[0,Math.PI/2,0]}><mesh castShadow position={[0,.2,0]}><boxGeometry args={[1.9,.62,3.5]}/><meshStandardMaterial color="#526b79" metalness={.25} roughness={.55}/></mesh><mesh castShadow position={[0,.72,-.25]}><boxGeometry args={[1.65,.72,1.75]}/><meshStandardMaterial color="#8aa0aa" metalness={.15} roughness={.4}/></mesh>{[-.82,.82].flatMap((xx)=>[-1.1,1.1].map((zz,i)=><mesh key={xx+"-"+i} position={[xx,-.12,zz]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[.34,.34,.18,16]}/><meshStandardMaterial color="#20252a" roughness={1}/></mesh>))}</group>;
  if(/photo|photograph|picture|fotografia|foto|imagem/.test(name)) return <group position={[x,1.45,z]} rotation={[0,0,Math.sin(t)*.015]}><mesh castShadow><boxGeometry args={[.62,.82,.035]}/><meshStandardMaterial color="#5b4937"/></mesh><mesh position={[0,0,.022]}><boxGeometry args={[.52,.7,.012]}/><meshStandardMaterial color="#d8c6a4"/></mesh><mesh position={[0,-.08,.032]}><sphereGeometry args={[.12,12,10]}/><meshStandardMaterial color="#9c745d"/></mesh></group>;
  if(/bed|cama|bett/.test(name)) return <group position={[x,0,z]}><mesh position={[0,.42,0]} castShadow><boxGeometry args={[1.8,.35,2.3]}/><meshStandardMaterial color="#614a3d"/></mesh><mesh position={[0,.68,0]}><boxGeometry args={[1.7,.18,2.15]}/><meshStandardMaterial color="#c9c3b8"/></mesh><mesh position={[-.48,.83,-.72]}><boxGeometry args={[.55,.22,.42]}/><meshStandardMaterial color="#e4dfd4"/></mesh></group>;
  if(/stairs|staircase|escadas|escadaria|treppe/.test(name)) return <group position={[x,0,z]}>{Array.from({length:6},(_,i)=><mesh key={i} position={[0,.18+i*.22,-i*.42]} castShadow><boxGeometry args={[1.8,.36,.46]}/><meshStandardMaterial color="#72543b"/></mesh>)}</group>;
@@ -104,7 +109,7 @@ const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;acti
  if(/sword|espada|knife|faca|schwert/.test(name)) return <group position={[x,.9,z]} rotation={[0,0,-.45]}><mesh castShadow position={[0,.55,0]}><boxGeometry args={[.09,1.1,.045]}/><meshStandardMaterial color="#c7d4df" metalness={0.8} roughness={0.25}/></mesh><mesh position={[0,-.05,0]}><cylinderGeometry args={[.045,.045,.28,8]}/><meshStandardMaterial color="#60402b"/></mesh></group>;
  if(/key|chave|schluessel|schlüssel/.test(name)) return <group position={[x,1,z]}><mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[.16,.035,8,16]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh><mesh position={[.23,0,0]}><boxGeometry args={[.4,.06,.05]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
  if(/door|porta|tuer|tür/.test(name)) return <group position={[x,1.2,z]} rotation={[0,/open|opened|abr|abert|oeff|öffnet/i.test(action)?progress*1.15:/close|closed|fech|schließ/i.test(action)?(1-progress)*1.15:0,0]}><mesh castShadow><boxGeometry args={[1.1,2.4,.12]}/><meshStandardMaterial color="#69452e"/></mesh><mesh position={[.38,0,.09]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
- return <group position={[x,.55,z]}><mesh castShadow><boxGeometry args={[.85,1.05,.85]}/><meshStandardMaterial color="#806044" roughness={0.9}/></mesh><mesh position={[0,0,.44]}><boxGeometry args={[.9,.08,.035]}/><meshStandardMaterial color="#b58b5b"/></mesh></group>;
+ return null;
 };
 
 export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
@@ -132,8 +137,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const shotDuration=shot?Math.max(.1,shot.end-shot.start):5;
  const localMotionTime=shotFrame/fps;
  const motion=inferMotion(action);
- const actorTravel=motion==="run"?Math.min(3.2,localMotionTime*2.7):motion==="walk"?Math.min(3.2,localMotionTime*1.15):0;
- const cameraX=interpolate(shotProgress,[0,1],[-.35,.35]);
+ const travel=motion==="run"?Math.min(3.2,localMotionTime*2.7):motion==="walk"?Math.min(3.2,localMotionTime*1.15):0;
  return <>
   <color attach="background" args={[sky]}/>
   <fog attach="fog" args={[sky,17,48]}/>
@@ -148,9 +152,9 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   {isCity && Array.from({length:10},(_,i)=><mesh key={i} position={[-11+i*2.5,1.7+(i%3)*.7,-8-(i%2)*3]} castShadow><boxGeometry args={[1.8,3.4+(i%3)*1.4,1.8]}/><meshStandardMaterial color={i%2?"#536171":"#777c82"} roughness={0.95}/></mesh>)}
   {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
-  <group position={[cameraX*.3+actorX,0,-actorTravel]}>
+  <group position={[actorX,0,-travel]} rotation={[0,motion==="turn"?motionProgress(localMotionTime,shotDuration)*Math.PI*.75:0,0]}>
     {modelFile ? <Suspense fallback={<Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/> }><GLBCharacter url={modelFile} frame={shotFrame} fps={fps} action={action} duration={shotDuration}/></Suspense> : <Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/>}
-    {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={shotFrame} fps={fps} action={action}/>) }
   </group>
+  {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={shotFrame} fps={fps} action={action}/>)}
  </>;
 };
