@@ -1,13 +1,13 @@
 # Renderizador local — Motor Video Studio
 
-Este é o primeiro renderizador funcional do projeto. Ele cria MP4 localmente com FFmpeg, usando imagens com movimento suave (zoom) ou vídeos como fundo de cada cena, e adiciona a narração.
+O renderizador cria MP4 localmente com FFmpeg. Quando uma cena não tem `[asset: ...]`, gera uma animação procedural 2D simples com bonecos blocados, cenário e movimentos básicos usando Pillow. Isso é um protótipo 2D, não animação 3D real.
 
 ## O que já faz
 - Lê o JSON exportado pelo botão **Salvar projeto** da interface.
 - Interpreta os blocos `[cena: tipo | nome]`.
 - Aceita `[asset: caminho/arquivo]` dentro de cada cena.
 - Aceita `[duracao: segundos]` dentro de cada cena.
-- Usa imagens com movimento de câmera suave e vídeos como fundos.
+- Usa imagens com movimento de câmera suave e vídeos como fundos.\n- Gera automaticamente cenas 2D procedurais quando não há asset: fundos, personagens blocados e movimentos básicos.\n- Mantém o áudio da narração no MP4.
 - Concatena as cenas e adiciona a narração.
 - Informa quando os tempos são estimados, em vez de sincronização real por palavra.
 
@@ -45,7 +45,7 @@ Os caminhos de `asset` são relativos à pasta onde está o arquivo JSON do proj
 
 ## Como renderizar pela interface (novo)
 
-1. Atualize o repositório e instale as dependências com `npm install`.
+1. Atualize o repositório e instale as dependências com `npm install`.\n2. Instale Pillow com `python -m pip install -r engine/requirements.txt`.
 2. Inicie com `npm run dev`.
 3. Abra o endereço local, carregue o áudio e clique em **GERAR MP4**.
 4. O servidor local recebe o roteiro e o áudio, executa o renderizador Python e devolve o MP4 para baixar.
