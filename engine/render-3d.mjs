@@ -1,5 +1,5 @@
 import {bundle} from "@remotion/bundler";
-import {getCompositions, renderMedia} from "@remotion/renderer";
+import {selectComposition, renderMedia} from "@remotion/renderer";
 import {spawn} from "node:child_process";
 import {promises as fs} from "node:fs";
 import path from "node:path";
@@ -142,9 +142,7 @@ const entryPoint=path.resolve("src/remotion/index.tsx");
 console.log("Preparando composição Remotion + Three.js...");
 const serveUrl=await bundle({entryPoint,publicDir,webpackOverride:config=>config,onProgress:progress=>console.log("BUNDLE "+Math.round(progress*100)+"%")});
 const inputProps={shots,audioFile,modelFile,fps,width,height};
-const compositions=await getCompositions(serveUrl,{inputProps,logLevel:"error",chromiumOptions:{gl:"angle"}});
-const composition=compositions.find(item=>item.id==="MotorVideo3D");
-if(!composition)throw new Error("Composição MotorVideo3D não foi encontrada no bundle.");
+const composition=await selectComposition({serveUrl,id:"MotorVideo3D",inputProps,logLevel:"error",chromiumOptions:{gl:"angle"}});
 await fs.mkdir(path.dirname(outputPath),{recursive:true});
 console.log("Iniciando renderização 3D: "+shots.length+" planos, "+width+"x"+height+" @ "+fps+" FPS.");
 await renderMedia({
@@ -157,4 +155,4 @@ await renderMedia({
 console.log("RENDER 3D CONCLUÍDO");
 console.log("Arquivo: "+outputPath);
 console.log("Áudio: "+audioDuration.toFixed(2)+"s | Soma das cenas: "+cursor.toFixed(2)+"s");
-console.log("AVISO: personagens e cenários atuais são procedurais estilizados; modelos GLB/rigs externos ainda não foram carregados.");
+console.log(modelFile?"Modelo GLB fornecido pelo usuário integrado à cena; animações disponíveis no arquivo foram acionadas conforme o marcador.":"Personagem e cenário procedurais estilizados utilizados; envie um GLB rigado para usar um personagem externo.");
