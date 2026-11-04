@@ -144,16 +144,27 @@ const entryPoint=path.resolve("src/remotion/index.tsx");
 console.log("Preparando composição Remotion + Three.js...");
 const serveUrl=await bundle({entryPoint,publicDir,webpackOverride:config=>config,onProgress:progress=>console.log("BUNDLE "+Math.round(progress*100)+"%")});
 const inputProps={shots,audioFile,modelFile,fps,width,height};
-const composition=await selectComposition({serveUrl,id:"MotorVideo3D",inputProps,logLevel:"error",chromiumOptions:{gl:"angle"}});
+async function renderWithBackend(gl) {
+  const composition=await selectComposition({serveUrl,id:"MotorVideo3D",inputProps,logLevel:"error",chromiumOptions:{gl}});
+  await renderMedia({
+    composition,serveUrl,codec:"h264",outputLocation:outputPath,inputProps,
+    chromiumOptions:{gl},
+    concurrency:Math.max(1,Math.min(2,os.cpus().length)),
+    imageFormat:"jpeg",jpegQuality:88,
+    onProgress:({progress})=>console.log("PROGRESS "+Math.round(progress*100)+"%")
+  });
+}
 await fs.mkdir(path.dirname(outputPath),{recursive:true});
 console.log("Iniciando renderização 3D: "+shots.length+" planos, "+width+"x"+height+" @ "+fps+" FPS.");
-await renderMedia({
-  composition,serveUrl,codec:"h264",outputLocation:outputPath,inputProps,
-  chromiumOptions:{gl:"angle"},
-  concurrency:Math.max(1,Math.min(2,os.cpus().length)),
-  imageFormat:"jpeg",jpegQuality:88,
-  onProgress:({progress})=>console.log("PROGRESS "+Math.round(progress*100)+"%")
-});
+try {
+  await renderWithBackend("angle");
+  console.log("Renderização concluída usando ANGLE/GPU quando disponível.");
+} catch (angleError) {
+  console.log("ANGLE falhou; tentando fallback de software SWANGLE: "+(angleError instanceof Error?angleError.message:String(angleError)));
+  await fs.rm(outputPath,{force:true});
+  await renderWithBackend("swangle");
+  console.log("Renderização concluída usando fallback SWANGLE.");
+}
 console.log("RENDER 3D CONCLUÍDO");
 console.log("Arquivo: "+outputPath);
 console.log("Áudio: "+audioDuration.toFixed(2)+"s | Soma das cenas: "+cursor.toFixed(2)+"s");
