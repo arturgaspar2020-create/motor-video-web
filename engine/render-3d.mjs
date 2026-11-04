@@ -95,7 +95,7 @@ function parseScript(source) {
   source.replace(/\r/g,"").split("\n").forEach((raw,index)=>{
     const line=raw.trim(); if(!line || line.startsWith("@"))return;
     const match=line.match(/^\[cena:\s*([^\]|]+)(?:\|\s*([^\]]+))?\]$/i);
-    if(match){flush();current={id:scenes.length+1,type:match[1].trim(),name:(match[2]||match[1]).trim(),directives:{},narration:[]};return;}
+    if(match){flush();current={id:scenes.length+1,type:match[1].trim(),name:(match[2]||match[1]).trim(),directives:{},shotDirectives:[],narration:[]};return;}
     const marker=line.match(/^\[([^:]+):\s*([^\]]*)\]$/);
     if(marker){if(current){const key=marker[1].trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");(current.directives[key]??=[]).push(marker[2].trim());}else warnings.push("Marcador fora de cena na linha "+(index+1));return;}
     if(current)current.narration.push(raw);else warnings.push("Texto antes da primeira cena na linha "+(index+1));
@@ -130,7 +130,7 @@ scenes.forEach((scene,index)=>{
       expression:(d.expressao||[]).at(-1)||"",
       environment:(d.ambiente||[]).at(-1)||"",
       lighting:(d.luz||[]).at(-1)||"",
-      camera:inferCamera(sentence,(d.camera||[]).at(-1)||""),
+      camera:ai.camera || inferCamera(sentence,(d.camera||[]).at(-1)||""),
       objects:[...new Set([...splitObjectLabels([...(d.elementos||[]),...(d.objetos||[])]),...inferObjects(sentence)])],
       position:(d.posicao||d.posicoes||[]).at(-1)||"",
       start:Number(cursor.toFixed(4)),end:Number((cursor+duration).toFixed(4)),duration:Number(duration.toFixed(4))
