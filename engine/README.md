@@ -43,7 +43,16 @@ O exército inimigo avançava em direção à passagem.
 
 Os caminhos de `asset` são relativos à pasta onde está o arquivo JSON do projeto ou podem ser absolutos.
 
-## Como renderizar
+## Como renderizar pela interface (novo)
+
+1. Atualize o repositório e instale as dependências com `npm install`.
+2. Inicie com `npm run dev`.
+3. Abra o endereço local, carregue o áudio e clique em **GERAR MP4**.
+4. O servidor local recebe o roteiro e o áudio, executa o renderizador Python e devolve o MP4 para baixar.
+
+O endpoint de renderização existe apenas no servidor local de desenvolvimento do Vite. O áudio e o roteiro não são enviados a serviços externos.
+
+## Como renderizar pelo terminal
 
 Abra o CMD na pasta do projeto e execute:
 
