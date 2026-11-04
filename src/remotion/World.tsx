@@ -1,4 +1,4 @@
-import React, {Suspense, useEffect, useLayoutEffect, useMemo} from "react";
+import React, {Suspense, useLayoutEffect, useMemo} from "react";
 import {useGLTF} from "@react-three/drei";
 import * as THREE from "three";
 import {clone as cloneSkeleton} from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -63,7 +63,7 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> 
      ||gltf.animations.find(clip=>/idle|stand|breath/i.test(clip.name))
      ||gltf.animations[0];
  },[gltf.animations,action]);
- useEffect(()=>{
+ useLayoutEffect(()=>{
    mixer.stopAllAction();
    if(selected){mixer.clipAction(selected).play();}
    return ()=>mixer.stopAllAction();
