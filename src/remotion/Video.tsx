@@ -6,7 +6,7 @@ import {CanvasWorld} from "./World";
 
 export type Shot = {
   id: string; scene_id: number; scene_name: string; scene_type: string;
-  narration: string; action: string; animation: string; environment: string;
+  narration: string; action: string; animation: string; expression: string; environment: string;
   lighting: string; camera: string; objects: string[]; position: string;
   start: number; end: number; duration: number;
 };
