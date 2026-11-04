@@ -132,6 +132,12 @@ if(args.align==="true"){
     } else console.log("AVISO: alinhamento insuficiente; mantendo estimativa proporcional.");
   } else console.log("AVISO: alinhador indisponível; mantendo estimativa proporcional.");
 }
+await fs.writeFile(planPath,JSON.stringify({
+  schema_version:"0.8",visual_direction:"cinematic_stylized_3d",
+  timing_method:args.align==="true"?"faster_whisper_word_timestamps_or_fallback":(explicit.every(Boolean)?"user_defined_scene_durations":"estimated_by_word_count"),
+  timing_is_word_aligned:false,audio_duration:Number(audioDuration.toFixed(3)),
+  video_duration:Number(cursor.toFixed(3)),scene_count:scenes.length,shot_count:shots.length,shots
+},null,2),"utf8");
 const entryPoint=path.resolve("src/remotion/index.tsx");
 console.log("Preparando composição Remotion + Three.js...");
 const serveUrl=await bundle({entryPoint,publicDir,webpackOverride:config=>config,onProgress:progress=>console.log("BUNDLE "+Math.round(progress*100)+"%")});
