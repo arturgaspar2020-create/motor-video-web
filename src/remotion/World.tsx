@@ -34,7 +34,15 @@ const Character:React.FC<{frame:number;fps:number;action:string}> = ({frame,fps,
 
 const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> = ({url,frame,fps,action}) => {
  const gltf=useGLTF(url);
- const model=useMemo(()=>{\n   const copy=cloneSkeleton(gltf.scene);\n   const box=new THREE.Box3().setFromObject(copy);\n   const size=box.getSize(new THREE.Vector3());\n   const scale=size.y>0?2.75/size.y:1;\n   copy.scale.setScalar(scale);\n   copy.position.y-=box.min.y*scale;\n   return copy;\n },[gltf.scene]);
+ const model=useMemo(()=>{
+   const copy=cloneSkeleton(gltf.scene);
+   const box=new THREE.Box3().setFromObject(copy);
+   const size=box.getSize(new THREE.Vector3());
+   const scale=size.y>0?2.75/size.y:1;
+   copy.scale.setScalar(scale);
+   copy.position.y-=box.min.y*scale;
+   return copy;
+ },[gltf.scene]);
  const mixer=useMemo(()=>new THREE.AnimationMixer(model),[model]);
  const selected=useMemo(()=>{
    const hint=action.toLowerCase();
