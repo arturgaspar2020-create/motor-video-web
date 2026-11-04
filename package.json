@@ -14,10 +14,12 @@
     "typescript": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "^0.468.0"
+    "lucide-react": "^0.468.0",
+    "busboy": "^1.6.0"
   },
   "devDependencies": {
     "@types/react": "latest",
-    "@types/react-dom": "latest"
+    "@types/react-dom": "latest",
+    "@types/busboy": "^1.5.4"
   }
 }
