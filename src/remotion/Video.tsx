@@ -14,9 +14,9 @@ export type CinematicVideoProps = {
   shots: Shot[]; audioFile: string; modelFile?: string; fps: number; width: number; height: number;
 };
 
-export const CinematicVideo: React.FC<CinematicVideoProps> = ({shots, audioFile, modelFile, width, height}) => {
+export const CinematicVideo: React.FC<CinematicVideoProps> = ({shots, audioFile, modelFile, fps, width, height}) => {
   const frame = useCurrentFrame();
-  const seconds = frame / 30;
+  const seconds = frame / fps;
   const active = shots.find((shot,index)=>seconds>=shot.start&&(seconds<shot.end||index===shots.length-1)) || shots[0];
   const cameraHint=(active?.camera||"").toLowerCase();
   const close=/close|close-up|rosto|detalhe|closeup/.test(cameraHint);
