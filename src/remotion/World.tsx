@@ -11,13 +11,17 @@ const Tree:React.FC<{x:number;z:number;scale?:number}> = ({x,z,scale=1}) => <gro
   <mesh position={[0,2.1,0]} castShadow><coneGeometry args={[.85,2.3,7]}/><meshStandardMaterial color="#28513e" roughness={1}/></mesh>
 </group>;
 
-const Character:React.FC<{frame:number;fps:number;action:string}> = ({frame,fps,action}) => {
+const Character:React.FC<{frame:number;fps:number;action:string;expression?:string}> = ({frame,fps,action,expression=""}) => {
  const walking=/walk|run|camin|corr|fug|andar|lauf|geht|wandert|rennt|sprint/i.test(action);
  const jumping=/jump|salta|pula|spring|springen|springt|huepft|hüpft/i.test(action);
  const waving=/wave|acen|winken|saluda|winkt/i.test(action);
  const pointing=/point|aponta|zeigt|indica/i.test(action);
  const crouching=/crouch|agacha|ajoelha|kneel|kniet|duckt/i.test(action);
  const t=frame/fps;
+ const happy=/happy|feliz|sorr|freude|glueck/i.test(expression);
+ const surprised=/surpres|surprise|medo|fear|erschrocken|shock/i.test(expression);
+ const sad=/triste|sad|traurig/i.test(expression);
+ const mouthScale: [number,number,number]=surprised?[.12,.14,.035]:happy?[.15,.065,.035]:sad?[.13,.035,.035]:[.12,.025,.03];
  const swing=walking?Math.sin(t*5.8)*.52:Math.sin(t*1.2)*.025;
  const bounce=jumping?Math.abs(Math.sin(t*3.1))*.55:walking?Math.abs(Math.sin(t*5.8))*.07:0;
  const armLeft: [number,number,number]=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:[swing,0,0];
@@ -26,7 +30,8 @@ const Character:React.FC<{frame:number;fps:number;action:string}> = ({frame,fps,
    <mesh position={[0,1.45,0]} castShadow><capsuleGeometry args={[.43,.85,5,12]}/><meshStandardMaterial color="#b96b43" roughness={.76}/></mesh>
    <mesh position={[0,2.42,.015]} castShadow><sphereGeometry args={[.39,24,18]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
    <mesh position={[0,2.67,-.02]} castShadow><sphereGeometry args={[.405,24,12]}/><meshStandardMaterial color="#273548" roughness={.95}/></mesh>
-   {[-.14,.14].map((x,i)=><group key={i}><mesh position={[x,2.43,.36]}><sphereGeometry args={[.075,12,10]}/><meshStandardMaterial color="#f5f0e6"/></mesh><mesh position={[x,2.43,.423]}><sphereGeometry args={[.033,10,8]}/><meshStandardMaterial color="#202a36"/></mesh></group>)}
+   {[-.14,.14].map((x,i)=><group key={i}><mesh position={[x,2.43,.36]}><sphereGeometry args={[surprised?.085:.075,12,10]}/><meshStandardMaterial color="#f5f0e6"/></mesh><mesh position={[x,2.43,.423]}><sphereGeometry args={[.033,10,8]}/><meshStandardMaterial color="#202a36"/></mesh></group>)}
+   <mesh position={[0,2.27,.36]} scale={mouthScale}><sphereGeometry args={[1,14,10]}/><meshStandardMaterial color="#542d2b"/></mesh>
    <mesh position={[0,1.55,-.43]} castShadow><boxGeometry args={[.62,.72,.28]}/><meshStandardMaterial color="#765036"/></mesh>
    {[-1,1].map((side,i)=><group key={side} position={[side*.53,1.92,0]} rotation={i===0?armLeft:armRight}>
      <mesh position={[0,-.32,0]} castShadow><capsuleGeometry args={[.135,.55,4,9]}/><meshStandardMaterial color="#b96b43"/></mesh>
@@ -87,6 +92,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const {fps}=useVideoConfig();
  const seconds=frame/fps;
  const shot=shots.find((item,index)=>seconds>=item.start&&(seconds<item.end||index===shots.length-1))||shots[shots.length-1];
+ const expression=shot?.expression||"";
  const action=(shot?.action||shot?.animation||"").toLowerCase();
  const environment=(shot?.environment||shot?.scene_name||"").toLowerCase();
  const isNight=/night|noite|escuro|dark|nacht|dunkel/i.test(environment+" "+(shot?.lighting||""));
@@ -115,7 +121,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
   <group position={[cameraX*.3,0,0]}>
-    {modelFile ? <Suspense fallback={<Character frame={frame} fps={fps} action={action}/> }><GLBCharacter url={modelFile} frame={frame} fps={fps} action={action}/></Suspense> : <Character frame={frame} fps={fps} action={action}/>}
+    {modelFile ? <Suspense fallback={<Character frame={frame} fps={fps} action={action} expression={expression}/> }><GLBCharacter url={modelFile} frame={frame} fps={fps} action={action}/></Suspense> : <Character frame={frame} fps={fps} action={action}/>}
     {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={frame} fps={fps} action={action}/>)}
   </group>
  </>;
