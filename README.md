@@ -2,7 +2,7 @@
 
 Editor e motor local de produção audiovisual, com objetivo de automatizar vídeos híbridos 2D/3D a partir de roteiro e narração.
 
-## Estado atual — Beta 0.5 (protótipo visual 2D)
+## Estado atual — Beta 0.6 (direção cinematográfica em preparação)
 
 ### Interface web
 - Editor de roteiro e parser inicial de cenas.
@@ -17,6 +17,16 @@ Editor e motor local de produção audiovisual, com objetivo de automatizar víd
 - Aplica movimento suave de zoom em imagens.
 - Concatena as cenas e adiciona áudio.
 - Durações explícitas por cena ou estimativa proporcional por palavras (sempre identificada como estimativa).
+
+
+## Beta 0.6 — direção de cenas
+
+- Adiciona `engine/director.py`, que transforma cada frase narrada em um plano identificável.
+- Preserva o texto da narração e gera tempos estimados por contagem de palavras.
+- Exporta um arquivo `*-director-plan.json` ao lado do MP4, com ação, expressão, câmera, ambiente, luz, objetos e efeitos indicados pelos marcadores.
+- Consulte [engine/CINEMATIC_3D_SPEC.md](engine/CINEMATIC_3D_SPEC.md) para a arquitetura do futuro renderizador 3D cinematográfico.
+
+**Importante:** esta etapa ainda não renderiza personagens 3D nem executa as ações do plano. O MP4 atual continua usando o renderizador anterior. Os tempos também são estimativas, não alinhamento palavra por palavra.
 
 ## Instalação da interface
 Requer Node.js LTS:
