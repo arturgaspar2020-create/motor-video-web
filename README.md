@@ -26,7 +26,7 @@ Editor local para transformar roteiro + narração em vídeo 3D cinematográfico
 - Para personagem profissional, envie um .glb rigado com animações incorporadas. O motor não modela automaticamente um personagem novo a partir do texto.
 - Objetos e cenários são montados proceduralmente por regras; nem todo objeto ou ação de linguagem natural é reconhecido.
 - O motor não cria automaticamente trilha musical, efeitos sonoros, legendas ou imagens de arquivo.
-- Não há garantia de aceleração GPU em todos os drivers; Chromium usa ANGLE e renderização com concorrência limitada para equilibrar a GTX 1060 de 6 GB e 16 GB de RAM.
+- Não há garantia de aceleração GPU em todos os drivers; Chromium tenta ANGLE/GPU e troca automaticamente para SWANGLE/software se necessário, com concorrência limitada para equilibrar a GTX 1060 de 6 GB e 16 GB de RAM.
 
 ## Instalação no Windows
 
