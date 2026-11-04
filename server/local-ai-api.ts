@@ -62,7 +62,7 @@ function applyShotMarkers(script: string, scenes: SceneInput[], plans: ShotPlan[
     }
     if (sceneIndex >= 0 && /^\[[^\]]+\]$/.test(value)) {
       flushNarration();
-      output.push(line);
+      if (!/^\[shot:/i.test(value)) output.push(line);
       continue;
     }
     if (sceneIndex >= 0 && value) narrationLines.push(value);
