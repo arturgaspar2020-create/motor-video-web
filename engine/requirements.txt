@@ -1,2 +1,2 @@
-# O renderizador atual usa apenas a biblioteca padrão do Python.
-# Não é necessário executar pip install.
+# Dependência para gerar quadros e personagens 2D proceduralmente.
+Pillow>=10.0.0
