@@ -62,6 +62,25 @@ function inferCamera(text, fallback) {
   if (/look|olha|observ|vê|see|sieht/i.test(text)) return "over-the-shoulder point of view";
   return fallback || "cinematic medium shot";
 }
+function inferObjects(text) {
+  const objects = [];
+  const rules = [
+    ["clock", /clock|watch|rel[oó]gio|horas|uhr/i],
+    ["door", /door|porta|port[aã]o|t[uü]r/i],
+    ["window", /window|janela|fenster/i],
+    ["flashlight", /flashlight|lantern|lanterna|torch|tocha|laterne|taschenlampe/i],
+    ["photo", /photo|photograph|picture|fotografia|foto|imagem/i],
+    ["bed", /bed|cama|bett/i],
+    ["stairs", /stairs|staircase|escadas|escadaria|treppe/i],
+    ["car", /car|vehicle|carro|autom[oó]vel|auto/i],
+    ["tree", /tree|[aá]rvore|[aá]rvores|baum/i],
+    ["map", /map|mapa|karte/i],
+    ["key", /key|chave|schl[uü]ssel/i],
+    ["book", /book|livro|buch/i]
+  ];
+  for (const [name, pattern] of rules) if (pattern.test(text)) objects.push(name);
+  return objects;
+}
 function parseScript(source) {
   const scenes=[]; let current=null; const warnings=[];
   const flush=()=>{if(current){current.narration=current.narration.join("\n").trim();scenes.push(current);current=null;}};
@@ -102,7 +121,7 @@ scenes.forEach((scene,index)=>{
       environment:(d.ambiente||[]).at(-1)||"",
       lighting:(d.luz||[]).at(-1)||"",
       camera:inferCamera(sentence,(d.camera||[]).at(-1)||""),
-      objects:[...(d.elementos||[]),...(d.objetos||[])],
+      objects:[...new Set([...(d.elementos||[]),...(d.objetos||[]),...inferObjects(sentence)])],
       position:(d.posicao||d.posicoes||[]).at(-1)||"",
       start:Number(cursor.toFixed(4)),end:Number((cursor+duration).toFixed(4)),duration:Number(duration.toFixed(4))
     });
