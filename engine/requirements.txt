@@ -1,0 +1,2 @@
+# O renderizador atual usa apenas a biblioteca padrão do Python.
+# Não é necessário executar pip install.
