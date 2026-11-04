@@ -17,7 +17,7 @@ const dimensions: Record<Ratio, [number, number]> = {
 export default function App() {
   const [script, setScript] = useState(initial);
   const [audio, setAudio] = useState<File | null>(null);
-  const [audioUrl, setAudioUrl] = useState("");
+  const [audioUrl, setAudioUrl] = useState("");\n  const [model, setModel] = useState<File | null>(null);\n  const [modelUrl, setModelUrl] = useState("");
   const [selected, setSelected] = useState(0);
   const [ratio, setRatio] = useState<Ratio>("16:9");
   const [fps, setFps] = useState("30");
@@ -25,7 +25,7 @@ export default function App() {
   const [rendering, setRendering] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [activeJobId, setActiveJobId] = useState("");
-  const audioInput = useRef<HTMLInputElement>(null);
+  const audioInput = useRef<HTMLInputElement>(null);\n  const modelInput = useRef<HTMLInputElement>(null);
   const projectInput = useRef<HTMLInputElement>(null);
   const project = useMemo(() => parseScript(script), [script]);
   const scene = project.scenes[selected];
@@ -57,7 +57,7 @@ export default function App() {
     if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudio(file); setAudioUrl(URL.createObjectURL(file)); setStatus("Áudio carregado");
   }
-  function updateJob(updated: Job) {
+  function uploadModel(file?: File) {\n    if (!file) return;\n    if (!file.name.toLowerCase().endsWith(".glb")) { setStatus("O modelo precisa estar no formato .glb"); return; }\n    if (modelUrl) URL.revokeObjectURL(modelUrl);\n    setModel(file); setModelUrl(URL.createObjectURL(file)); setStatus("Modelo 3D carregado");\n  }\n  function updateJob(updated: Job) {
     setJobs(previous => {
       const exists = previous.some(item => item.id === updated.id);
       return exists ? previous.map(item => item.id === updated.id ? updated : item) : [updated, ...previous];
@@ -70,7 +70,7 @@ export default function App() {
     const [width, height] = dimensions[ratio];
     const data = new FormData();
     data.append("project", JSON.stringify({ script, settings: { ratio, fps } }));
-    data.append("audio", audio, audio.name); data.append("width", String(width));
+    data.append("audio", audio, audio.name);\n    if (model) data.append("model", model, model.name);\n    data.append("width", String(width));
     data.append("height", String(height)); data.append("fps", fps);
     let jobId = "";
     try {
@@ -142,7 +142,7 @@ export default function App() {
         <section className="panel"><h2>✎ ROTEIRO</h2><textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/><div className="muted">Use [cena: tipo | nome] para iniciar cada cena. A prévia 3D procedural interpreta as diretivas básicas. O render MP4 ainda usa o renderizador atual. Duração opcional: [duracao: 8].</div></section>
         <section className="panel">
           <h2>▣ PRÉ-VISUALIZAÇÃO <span className="live">THREE.JS · 3D</span></h2>
-          {scene ? <Scene3DPreview name={scene.name} type={scene.type} directives={scene.directives} ratio={ratio}/> : <div className="preview"><div className="center"><b>Adicione uma cena ao roteiro</b><small>Aguardando conteúdo</small></div></div>}
+          {scene ? <Scene3DPreview name={scene.name} type={scene.type} directives={scene.directives} ratio={ratio} modelUrl={modelUrl || undefined}/> : <div className="preview"><div className="center"><b>Adicione uma cena ao roteiro</b><small>Aguardando conteúdo</small></div></div>}
           <p className="muted">Prévia 3D em tempo real. A exportação MP4 ainda usa o renderizador anterior; a integração 3D no vídeo é a próxima etapa.</p>
         </section>
       </div>
@@ -154,6 +154,9 @@ export default function App() {
         <section className="panel"><h2>♫ MÍDIA E CONFIGURAÇÃO</h2><label>ÁUDIO DA NARRAÇÃO</label>
           <div className="upload"><span>♫</span><div><b>{audio?.name || "Nenhum áudio carregado"}</b><small>MP3, WAV ou M4A</small></div><button onClick={() => audioInput.current?.click()}>Enviar áudio</button><input ref={audioInput} hidden type="file" accept="audio/*" onChange={e => upload(e.target.files?.[0])}/></div>
           {audioUrl && <audio controls src={audioUrl}/>}
+          <label style={{display:"block",marginTop:15}}>PERSONAGEM 3D OPCIONAL (GLB)</label>
+          <div className="upload"><span>♟</span><div><b>{model?.name || "Usar personagem procedural"}</b><small>Modelo .glb com rig/animações, se disponíveis</small></div><button onClick={() => modelInput.current?.click()}>Enviar GLB</button><input ref={modelInput} hidden type="file" accept=".glb,model/gltf-binary" onChange={e => uploadModel(e.target.files?.[0])}/></div>
+          {model && <button style={{marginTop:7}} onClick={() => { if(modelUrl)URL.revokeObjectURL(modelUrl);setModel(null);setModelUrl("");setStatus("Personagem procedural selecionado"); }}>Remover modelo</button>}
           <div className="settings"><div><label>FORMATO</label><select value={ratio} onChange={e => setRatio(e.target.value as Ratio)}><option>16:9</option><option>9:16</option><option>1:1</option></select></div><div><label>FPS</label><select value={fps} onChange={e => setFps(e.target.value)}><option>24</option><option>30</option><option>60</option></select></div></div>
           <button className="primary render-wide" onClick={render} disabled={rendering || !audio}>{rendering ? "RENDERIZANDO NO COMPUTADOR..." : "▶ GERAR VÍDEO MP4"}</button>
           {rendering && <button className="stop-wide" onClick={stopRender}>■ PARAR RENDERIZAÇÃO</button>}
