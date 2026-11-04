@@ -20,6 +20,7 @@ export default function App() {
   const [audioUrl, setAudioUrl] = useState("");
   const [model, setModel] = useState<File | null>(null);
   const [modelUrl, setModelUrl] = useState("");
+  const [alignAudio, setAlignAudio] = useState(false);
   const [selected, setSelected] = useState(0);
   const [ratio, setRatio] = useState<Ratio>("16:9");
   const [fps, setFps] = useState("30");
@@ -80,7 +81,8 @@ export default function App() {
     const data = new FormData();
     data.append("project", JSON.stringify({ script, settings: { ratio, fps } }));
     data.append("audio", audio, audio.name);
-    if (model) data.append("model", model, model.name);\n    data.append("width", String(width));
+    if (model) data.append("model", model, model.name);
+    data.append("align", alignAudio ? "true" : "false");\n    data.append("width", String(width));
     data.append("height", String(height)); data.append("fps", fps);
     let jobId = "";
     try {
@@ -167,6 +169,8 @@ export default function App() {
           <label style={{display:"block",marginTop:15}}>PERSONAGEM 3D OPCIONAL (GLB)</label>
           <div className="upload"><span>♟</span><div><b>{model?.name || "Usar personagem procedural"}</b><small>Modelo .glb com rig/animações, se disponíveis</small></div><button onClick={() => modelInput.current?.click()}>Enviar GLB</button><input ref={modelInput} hidden type="file" accept=".glb,model/gltf-binary" onChange={e => uploadModel(e.target.files?.[0])}/></div>
           {model && <button style={{marginTop:7}} onClick={() => { if(modelUrl)URL.revokeObjectURL(modelUrl);setModel(null);setModelUrl("");setStatus("Personagem procedural selecionado"); }}>Remover modelo</button>}
+          <label style={{display:"flex",alignItems:"center",gap:8,marginTop:14,cursor:"pointer"}}><input type="checkbox" checked={alignAudio} onChange={e=>setAlignAudio(e.target.checked)}/> Tentar alinhar as frases com a fala usando IA local</label>
+          <p className="muted">Opcional: requer faster-whisper instalado e baixa o modelo de reconhecimento na primeira execução. Se falhar, o motor usa estimativa por palavras.</p>
           <div className="settings"><div><label>FORMATO</label><select value={ratio} onChange={e => setRatio(e.target.value as Ratio)}><option>16:9</option><option>9:16</option><option>1:1</option></select></div><div><label>FPS</label><select value={fps} onChange={e => setFps(e.target.value)}><option>24</option><option>30</option><option>60</option></select></div></div>
           <button className="primary render-wide" onClick={render} disabled={rendering || !audio}>{rendering ? "RENDERIZANDO NO COMPUTADOR..." : "▶ GERAR VÍDEO MP4"}</button>
           {rendering && <button className="stop-wide" onClick={stopRender}>■ PARAR RENDERIZAÇÃO</button>}
