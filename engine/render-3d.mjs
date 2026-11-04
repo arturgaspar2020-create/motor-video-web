@@ -99,7 +99,7 @@ await fs.copyFile(audioPath,path.join(publicDir,audioFile));
 const entryPoint=path.resolve("src/remotion/index.tsx");
 console.log("Preparando composição Remotion + Three.js...");
 const serveUrl=await bundle({entryPoint,publicDir,webpackOverride:config=>config,onProgress:progress=>console.log("BUNDLE "+Math.round(progress*100)+"%")});
-const inputProps={shots,audioFile,fps,width,height};
+const inputProps={shots,audioFile,modelFile,fps,width,height};
 const compositions=await getCompositions(serveUrl,{inputProps,logLevel:"error",chromiumOptions:{gl:"angle"}});
 const composition=compositions.find(item=>item.id==="MotorVideo3D");
 if(!composition)throw new Error("Composição MotorVideo3D não foi encontrada no bundle.");
