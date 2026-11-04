@@ -132,6 +132,7 @@ if(args.align==="true"){
     } else console.log("AVISO: alinhamento insuficiente; mantendo estimativa proporcional.");
   } else console.log("AVISO: alinhador indisponível; mantendo estimativa proporcional.");
 }
+if(shots.length){const last=shots[shots.length-1];if(last.end<audioDuration){last.end=Number(audioDuration.toFixed(4));last.duration=Number((last.end-last.start).toFixed(4));}cursor=Math.max(cursor,last.end);}
 await fs.writeFile(planPath,JSON.stringify({
   schema_version:"0.8",visual_direction:"cinematic_stylized_3d",
   timing_method:args.align==="true"?"faster_whisper_word_timestamps_or_fallback":(explicit.every(Boolean)?"user_defined_scene_durations":"estimated_by_word_count"),
