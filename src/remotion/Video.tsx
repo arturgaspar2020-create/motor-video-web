@@ -21,7 +21,7 @@ export const CinematicVideo: React.FC<CinematicVideoProps> = ({shots, audioFile,
   const cameraHint=(active?.camera||"").toLowerCase();
   const close=/close|close-up|rosto|detalhe|closeup/.test(cameraHint);
   const aerial=/aerial|drone|overhead|aérea|alto/.test(cameraHint);
-  const cameraX=7+Math.sin(frame*.008)*.45;
+  const cameraX=7+Math.sin(frame*.008)*.35;
   const cameraY=aerial?10:close?3.4:5.2;
   const cameraZ=close?6:10;
   return <>

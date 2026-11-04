@@ -1,2 +1,4 @@
 # Optional free local narration alignment (CPU int8)
 faster-whisper>=1.1.0
+# faster-whisper <=1.2.1 passes metadata_errors to av.open(); PyAV 19 removed it.
+av>=11,<19
