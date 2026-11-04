@@ -125,8 +125,8 @@ scenes.forEach((scene,index)=>{
     shots.push({
       id:"S"+String(index+1).padStart(3,"0")+"-P"+String(shotIndex+1).padStart(2,"0"),
       scene_id:index+1,scene_name:scene.name,scene_type:scene.type,narration:sentence,
-      action:inferAction(sentence) || (sentences.length===1 ? sceneAction : ""),
-      animation:inferAction(sentence) || (sentences.length===1 ? sceneAnimation : ""),
+      action:inferAction(sentence) || (shotIndex===0 ? sceneAction : ""),
+      animation:inferAction(sentence) || (shotIndex===0 ? sceneAnimation : ""),
       expression:(d.expressao||[]).at(-1)||"",
       environment:(d.ambiente||[]).at(-1)||"",
       lighting:(d.luz||[]).at(-1)||"",
