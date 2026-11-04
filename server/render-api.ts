@@ -109,7 +109,7 @@ export function renderApi(): Plugin {
               const renderer = path.resolve(process.cwd(), "engine", "render-3d.mjs");
               const child = spawn(process.execPath,
                 [renderer, "--project", projectPath, "--audio", audioPath, "--output", outputPath,
-                  "--width", String(width), "--height", String(height), "--fps", String(fps), ...(modelPath ? ["--model", modelPath] : [])],
+                  "--width", String(width), "--height", String(height), "--fps", String(fps), ...(modelPath ? ["--model", modelPath] : []), ...(fields.align === "true" ? ["--align", "true"] : [])],
                 { cwd: process.cwd(), windowsHide: true });
               job.child = child;
               child.stdout.on("data", chunk => appendLog(job, chunk.toString()));
