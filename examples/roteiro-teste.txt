@@ -1,0 +1,12 @@
+@idioma pt-BR
+@titulo Teste do Motor Video Studio
+
+[cena: imagem | ponte]
+[asset: media/ponte.jpg]
+[duracao: 8]
+Uma ponte atravessa o rio e conecta as duas margens.
+
+[cena: video | estrada]
+[asset: media/estrada.mp4]
+[duracao: 8]
+Uma estrada aparece ao fundo enquanto a câmera avança lentamente.
