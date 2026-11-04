@@ -2,7 +2,7 @@
 
 Editor e motor local de produção audiovisual, com objetivo de automatizar vídeos híbridos 2D/3D a partir de roteiro e narração.
 
-## Estado atual — Beta 0.2
+## Estado atual — Beta 0.3
 
 ### Interface web
 - Editor de roteiro e parser inicial de cenas.
@@ -38,7 +38,7 @@ python engine/render.py --project projeto-motor-video.json --audio narracao.mp3 
 ```
 
 ## Limitações honestas desta versão
-- A interface ainda não possui um botão integrado de renderização.
+- A interface agora possui botão integrado que chama o renderizador local pelo servidor Vite.
 - O renderizador inicial usa assets locais fornecidos pelo usuário; não gera imagens sozinho.
 - GLB/3D, personagens animados, geração automática de assets e sincronização palavra por palavra ainda não estão implementados.
 - Pré-visualização web é estrutural, não representa o MP4 final.
