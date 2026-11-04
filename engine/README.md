@@ -11,7 +11,7 @@ O fluxo principal da interface usa **Remotion + Three.js** para compor cenas 3D 
 5. Carregue o áudio. Opcionalmente carregue um personagem `.glb` com rig e animações.
 6. Clique em **GERAR MP4**.
 
-A primeira renderização pode baixar o Chromium Headless Shell do Remotion. O motor usa ANGLE/WebGL e concorrência limitada para reduzir a pressão de memória.
+A primeira renderização pode baixar o Chromium Headless Shell do Remotion. O motor tenta ANGLE/WebGL e usa SWANGLE/software como fallback, com concorrência limitada para reduzir a pressão de memória.
 
 ## Personagens GLB
 
