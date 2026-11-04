@@ -10,7 +10,13 @@ const Root: React.FC = () => (
     fps={30}
     width={1920}
     height={1080}
-    defaultProps={{shots: [], audioFile: "narration.mp3"}}
+    defaultProps={{shots: [], audioFile: "narration.mp3", fps: 30, width: 1920, height: 1080}}
+    calculateMetadata={({props}) => ({
+      durationInFrames: Math.max(1, Math.ceil(Math.max(0.1, ...props.shots.map((shot) => shot.end)) * props.fps)),
+      fps: props.fps,
+      width: props.width,
+      height: props.height,
+    })}
   />
 );
 registerRoot(Root);
