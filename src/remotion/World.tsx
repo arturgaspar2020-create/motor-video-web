@@ -12,10 +12,17 @@ const Tree:React.FC<{x:number;z:number;scale?:number}> = ({x,z,scale=1}) => <gro
 </group>;
 
 const Character:React.FC<{frame:number;fps:number;action:string}> = ({frame,fps,action}) => {
- const walking=/walk|run|camin|corr|fug|andar/i.test(action);
+ const walking=/walk|run|camin|corr|fug|andar|laufen|rennt/i.test(action);
+ const jumping=/jump|salta|pula|spring|springen/i.test(action);
+ const waving=/wave|acen|winken|saluda/i.test(action);
+ const pointing=/point|aponta|zeigt|indica/i.test(action);
+ const crouching=/crouch|agacha|ajoelha|kneel|kniet/i.test(action);
  const t=frame/fps;
  const swing=walking?Math.sin(t*5.8)*.52:Math.sin(t*1.2)*.025;
- return <group position={[0,walking?Math.abs(Math.sin(t*5.8))*.07:0,0]} rotation={[0,Math.sin(t*.35)*.1,0]}>
+ const bounce=jumping?Math.abs(Math.sin(t*3.1))*.55:walking?Math.abs(Math.sin(t*5.8))*.07:0;
+ const armLeft=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:[swing,0,0];
+ const armRight=pointing?[0,0,.8]:[walking?-swing:0,0,0];
+ return <group position={[0,bounce-(crouching?.45:0),0]} rotation={[0,Math.sin(t*.35)*.1,0]}>
    <mesh position={[0,1.45,0]} castShadow><capsuleGeometry args={[.43,.85,5,12]}/><meshStandardMaterial color="#b96b43" roughness={.76}/></mesh>
    <mesh position={[0,2.42,.015]} castShadow><sphereGeometry args={[.39,24,18]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
    <mesh position={[0,2.67,-.02]} castShadow><sphereGeometry args={[.405,24,12]}/><meshStandardMaterial color="#273548" roughness={.95}/></mesh>
