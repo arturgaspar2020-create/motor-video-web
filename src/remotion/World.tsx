@@ -12,11 +12,11 @@ const Tree:React.FC<{x:number;z:number;scale?:number}> = ({x,z,scale=1}) => <gro
 </group>;
 
 const Character:React.FC<{frame:number;fps:number;action:string}> = ({frame,fps,action}) => {
- const walking=/walk|run|camin|corr|fug|andar|laufen|rennt/i.test(action);
- const jumping=/jump|salta|pula|spring|springen/i.test(action);
- const waving=/wave|acen|winken|saluda/i.test(action);
+ const walking=/walk|run|camin|corr|fug|andar|lauf|geht|wandert|rennt|sprint/i.test(action);
+ const jumping=/jump|salta|pula|spring|springen|springt|huepft|hüpft/i.test(action);
+ const waving=/wave|acen|winken|saluda|winkt/i.test(action);
  const pointing=/point|aponta|zeigt|indica/i.test(action);
- const crouching=/crouch|agacha|ajoelha|kneel|kniet/i.test(action);
+ const crouching=/crouch|agacha|ajoelha|kneel|kniet|duckt/i.test(action);
  const t=frame/fps;
  const swing=walking?Math.sin(t*5.8)*.52:Math.sin(t*1.2)*.025;
  const bounce=jumping?Math.abs(Math.sin(t*3.1))*.55:walking?Math.abs(Math.sin(t*5.8))*.07:0;
@@ -74,11 +74,11 @@ const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;acti
  const name=label.toLowerCase();
  const x=(index%3-1)*1.35+.9, z=.25+Math.floor(index/3)*.65;
  const t=frame/fps;
- if(/map|carta|paper|papel|book|livro|document/.test(name)) return <group position={[x,1.55,z]} rotation={[.12,0,Math.sin(t)*.025]}><mesh castShadow><boxGeometry args={[.65,.035,.82]}/><meshStandardMaterial color="#e6d4a6"/></mesh><mesh position={[0,.025,0]}><boxGeometry args={[.48,.008,.62]}/><meshStandardMaterial color="#b49a67"/></mesh></group>;
- if(/lantern|lanterna|torch|tocha/.test(name)) return <group position={[x,.8,z]}><mesh castShadow><cylinderGeometry args={[.16,.19,.38,12]}/><meshStandardMaterial color="#a66b32" metalness={0.5}/></mesh><mesh position={[0,.28,0]}><sphereGeometry args={[.13,12,10]}/><meshStandardMaterial color="#ffb24c" emissive="#ff8c22" emissiveIntensity={2}/></mesh><pointLight position={[0,.35,0]} color="#ff9c43" intensity={2.5} distance={5}/></group>;
- if(/sword|espada|knife|faca/.test(name)) return <group position={[x,.9,z]} rotation={[0,0,-.45]}><mesh castShadow position={[0,.55,0]}><boxGeometry args={[.09,1.1,.045]}/><meshStandardMaterial color="#c7d4df" metalness={0.8} roughness={0.25}/></mesh><mesh position={[0,-.05,0]}><cylinderGeometry args={[.045,.045,.28,8]}/><meshStandardMaterial color="#60402b"/></mesh></group>;
- if(/key|chave/.test(name)) return <group position={[x,1,z]}><mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[.16,.035,8,16]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh><mesh position={[.23,0,0]}><boxGeometry args={[.4,.06,.05]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
- if(/door|porta/.test(name)) return <group position={[x,1.2,z]} rotation={[0,/open|opened|abr|abert/i.test(action)?Math.sin(t*2)*.7:0,0]}><mesh castShadow><boxGeometry args={[1.1,2.4,.12]}/><meshStandardMaterial color="#69452e"/></mesh><mesh position={[.38,0,.09]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
+ if(/map|karte|carta|paper|papel|book|livro|document/.test(name)) return <group position={[x,1.55,z]} rotation={[.12,0,Math.sin(t)*.025]}><mesh castShadow><boxGeometry args={[.65,.035,.82]}/><meshStandardMaterial color="#e6d4a6"/></mesh><mesh position={[0,.025,0]}><boxGeometry args={[.48,.008,.62]}/><meshStandardMaterial color="#b49a67"/></mesh></group>;
+ if(/lantern|lanterna|torch|tocha|taschenlampe|laterne/.test(name)) return <group position={[x,.8,z]}><mesh castShadow><cylinderGeometry args={[.16,.19,.38,12]}/><meshStandardMaterial color="#a66b32" metalness={0.5}/></mesh><mesh position={[0,.28,0]}><sphereGeometry args={[.13,12,10]}/><meshStandardMaterial color="#ffb24c" emissive="#ff8c22" emissiveIntensity={2}/></mesh><pointLight position={[0,.35,0]} color="#ff9c43" intensity={2.5} distance={5}/></group>;
+ if(/sword|espada|knife|faca|schwert/.test(name)) return <group position={[x,.9,z]} rotation={[0,0,-.45]}><mesh castShadow position={[0,.55,0]}><boxGeometry args={[.09,1.1,.045]}/><meshStandardMaterial color="#c7d4df" metalness={0.8} roughness={0.25}/></mesh><mesh position={[0,-.05,0]}><cylinderGeometry args={[.045,.045,.28,8]}/><meshStandardMaterial color="#60402b"/></mesh></group>;
+ if(/key|chave|schluessel|schlüssel/.test(name)) return <group position={[x,1,z]}><mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[.16,.035,8,16]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh><mesh position={[.23,0,0]}><boxGeometry args={[.4,.06,.05]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
+ if(/door|porta|tuer|tür/.test(name)) return <group position={[x,1.2,z]} rotation={[0,/open|opened|abr|abert/i.test(action)?Math.sin(t*2)*.7:0,0]}><mesh castShadow><boxGeometry args={[1.1,2.4,.12]}/><meshStandardMaterial color="#69452e"/></mesh><mesh position={[.38,0,.09]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
  return <group position={[x,.55,z]}><mesh castShadow><boxGeometry args={[.85,1.05,.85]}/><meshStandardMaterial color="#806044" roughness={0.9}/></mesh><mesh position={[0,0,.44]}><boxGeometry args={[.9,.08,.035]}/><meshStandardMaterial color="#b58b5b"/></mesh></group>;
 };
 
@@ -89,13 +89,13 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const shot=shots.find((item,index)=>seconds>=item.start&&(seconds<item.end||index===shots.length-1))||shots[shots.length-1];
  const action=(shot?.action||shot?.animation||"").toLowerCase();
  const environment=(shot?.environment||shot?.scene_name||"").toLowerCase();
- const isNight=/night|noite|escuro|dark/i.test(environment+" "+(shot?.lighting||""));
- const isDesert=/desert|deserto|sand|areia/i.test(environment);
- const isSnow=/snow|neve|gelo|ice/i.test(environment);
- const isCity=/city|cidade|street|rua|urban|urbano/i.test(environment);
- const isInterior=/inside|interior|room|quarto|casa|office|escritório/i.test(environment);
- const isWar=/war|batalha|battle|ruins|ruínas/i.test(environment);
- const isOcean=/ocean|sea|mar|oceano|lake|lago/i.test(environment);
+ const isNight=/night|noite|escuro|dark|nacht|dunkel/i.test(environment+" "+(shot?.lighting||""));
+ const isDesert=/desert|deserto|sand|areia|wueste|wüste/i.test(environment);
+ const isSnow=/snow|neve|gelo|ice|schnee|eis/i.test(environment);
+ const isCity=/city|cidade|street|rua|urban|urbano|stadt/i.test(environment);
+ const isInterior=/inside|interior|room|quarto|casa|office|escritório|zimmer|innenraum|haus|huette|hütte/i.test(environment);
+ const isWar=/war|batalha|battle|ruins|ruínas|krieg|schlacht/i.test(environment);
+ const isOcean=/ocean|sea|mar|oceano|lake|lago|meer|see/i.test(environment);
  const ground=isSnow?"#cbd5df":isDesert?"#a98a58":"#52634c";
  const sky=isNight?"#101b34":isSnow?"#aebdca":"#91a9bd";
  const t=frame/fps;
