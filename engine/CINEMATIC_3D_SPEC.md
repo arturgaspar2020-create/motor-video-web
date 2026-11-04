@@ -1,4 +1,4 @@
-# Motor Video Studio — Beta 0.6 cinematic 3D architecture
+# Motor Video Studio — Beta 0.8 cinematic 3D architecture
 
 ## Visual target
 Cinematic stylized 3D: expressive original characters, detailed optimized sets, readable props, coherent lighting, depth, deliberate composition and film-like camera movement. Not flat 2D and not a promise of photorealism.
@@ -53,5 +53,20 @@ Current director copies scene-level notes to sentence shots. For shot-specific d
 - Never invent a visible event that contradicts spoken words.
 - For abstract narration, use a relevant visual metaphor or environment insert, not an unrelated action.
 
-## Honest implementation status
-Beta 0.6 adds a machine-readable shot plan and documents the 3D renderer contract. It does not yet render 3D characters, perform exact forced alignment, or execute planned actions in the final MP4. Those require the Three.js/Remotion renderer, licensed model assets, rig/animation mappings and audio-alignment integration.
+## Implementation status — Beta 0.8
+
+Implemented in the repository:
+- Remotion composition and Three.js WebGL scene are used for the final MP4 export through Chromium/ANGLE.
+- Shot plans are built from narration sentences and scene directives; the MP4 contains the original narration audio.
+- Procedural stylized sets cover forest/mountains, city, interior, desert, snow, war rubble and water.
+- Procedural character cues include walk/run, jump, wave, point and crouch; basic facial expression cues are available.
+- Named procedural props include maps/books, lanterns, swords/knives, keys, doors and crates.
+- Optional GLB upload loads a rigged user character and uses embedded clips when available.
+- Optional faster-whisper word timestamps can assist shot timing; the plan records that this is ASR-assisted and not forced alignment.
+
+Still limited:
+- Procedural character is a stylized blockout, not a professional realistic human model.
+- GLB quality, rig naming and animation coverage depend on the file supplied by the user.
+- Natural-language action and object recognition is rule-based and supports a finite vocabulary.
+- Word timing falls back to word-count estimates if faster-whisper is not installed or transcript coverage is low.
+- First Windows build/render, GPU driver behavior, and memory use must be validated on the target PC.
