@@ -137,7 +137,7 @@ export default function App() {
 
   return <div className="app">
     <header>
-      <div className="logo">🎬 <span>MOTOR VIDEO <small>STUDIO · BETA 0.7 · 3D PREVIEW</small></span></div>
+      <div className="logo">🎬 <span>MOTOR VIDEO <small>STUDIO · BETA 0.8 · 3D RENDER</small></span></div>
       <div className="actions">
         <span className="status">● {status}</span>
         <button onClick={() => projectInput.current?.click()}>Abrir projeto</button>
@@ -152,11 +152,11 @@ export default function App() {
         <div className="stats"><b>{project.scenes.length}<small>CENAS</small></b><b>{project.scenes.reduce((n, s) => n + countWords(s.narration), 0)}<small>PALAVRAS</small></b><b>{project.scenes.filter(s => s.narration).length}<small>COM NARRAÇÃO</small></b></div>
       </div>
       <div className="grid">
-        <section className="panel"><h2>✎ ROTEIRO</h2><textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/><div className="muted">Use [cena: tipo | nome] para iniciar cada cena. A prévia 3D procedural interpreta as diretivas básicas. O render MP4 ainda usa o renderizador atual. Duração opcional: [duracao: 8].</div></section>
+        <section className="panel"><h2>✎ ROTEIRO</h2><textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/><div className="muted">Use [cena: tipo | nome] para iniciar cada cena. A prévia e o MP4 usam o renderizador 3D. Use [acao:], [ambiente:], [elementos:], [camera:] e [animacao:] para dirigir as cenas. Duração opcional: [duracao: 8].</div></section>
         <section className="panel">
           <h2>▣ PRÉ-VISUALIZAÇÃO <span className="live">THREE.JS · 3D</span></h2>
           {scene ? <Scene3DPreview name={scene.name} type={scene.type} directives={scene.directives} ratio={ratio} modelUrl={modelUrl || undefined}/> : <div className="preview"><div className="center"><b>Adicione uma cena ao roteiro</b><small>Aguardando conteúdo</small></div></div>}
-          <p className="muted">Prévia 3D em tempo real. A exportação MP4 ainda usa o renderizador anterior; a integração 3D no vídeo é a próxima etapa.</p>
+          <p className="muted">Prévia 3D em tempo real; o MP4 final também é renderizado por Remotion + Three.js.</p>
         </section>
       </div>
       <div className="grid lower">
@@ -196,7 +196,7 @@ export default function App() {
       </section>
 
       <section className="panel details"><h2>DETALHES DA CENA</h2>{scene ? <><h3>{scene.name}</h3><div className="chips">{scene.directives.map((directive, index) => <span key={index}>{directive}</span>)}</div><label>NARRAÇÃO</label><p>{scene.narration || "Nenhuma fala vinculada."}</p></> : <p className="muted">Selecione uma cena.</p>}{project.warnings.map((warning, index) => <p className="warning" key={index}>{warning}</p>)}</section>
-      <footer>MOTOR VIDEO STUDIO · BETA 0.7 <span>Histórico de renderização · relatórios de diagnóstico · renderização local</span></footer>
+      <footer>MOTOR VIDEO STUDIO · BETA 0.8 <span>Histórico de renderização · relatórios de diagnóstico · renderização local</span></footer>
     </main>
   </div>;
 }
