@@ -30,7 +30,7 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
    <mesh position={[0,1.45,0]} castShadow><capsuleGeometry args={[.43,.85,5,12]}/><meshStandardMaterial color="#b96b43" roughness={.76}/></mesh>
    <mesh position={[0,2.42,.015]} castShadow><sphereGeometry args={[.39,24,18]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
    <mesh position={[0,2.67,-.02]} castShadow><sphereGeometry args={[.405,24,12]}/><meshStandardMaterial color="#273548" roughness={.95}/></mesh>
-   {[-.14,.14].map((x,i)=><group key={i}><mesh position={[x,2.43,.36]}><sphereGeometry args={[surprised?.085:.075,12,10]}/><meshStandardMaterial color="#f5f0e6"/></mesh><mesh position={[x,2.43,.423]}><sphereGeometry args={[.033,10,8]}/><meshStandardMaterial color="#202a36"/></mesh></group>)}
+   {[-.14,.14].map((x,i)=><group key={i}><mesh position={[x,2.43,.36]}><sphereGeometry args={[surprised ? 0.085 : 0.075,12,10]}/><meshStandardMaterial color="#f5f0e6"/></mesh><mesh position={[x,2.43,.423]}><sphereGeometry args={[.033,10,8]}/><meshStandardMaterial color="#202a36"/></mesh></group>)}
    <mesh position={[0,2.27,.36]} scale={mouthScale}><sphereGeometry args={[1,14,10]}/><meshStandardMaterial color="#542d2b"/></mesh>
    <mesh position={[0,1.55,-.43]} castShadow><boxGeometry args={[.62,.72,.28]}/><meshStandardMaterial color="#765036"/></mesh>
    {[-1,1].map((side,i)=><group key={side} position={[side*.53,1.92,0]} rotation={i===0?armLeft:armRight}>
@@ -83,7 +83,7 @@ const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;acti
  if(/lantern|lanterna|torch|tocha|taschenlampe|laterne/.test(name)) return <group position={[x,.8,z]}><mesh castShadow><cylinderGeometry args={[.16,.19,.38,12]}/><meshStandardMaterial color="#a66b32" metalness={0.5}/></mesh><mesh position={[0,.28,0]}><sphereGeometry args={[.13,12,10]}/><meshStandardMaterial color="#ffb24c" emissive="#ff8c22" emissiveIntensity={2}/></mesh><pointLight position={[0,.35,0]} color="#ff9c43" intensity={2.5} distance={5}/></group>;
  if(/sword|espada|knife|faca|schwert/.test(name)) return <group position={[x,.9,z]} rotation={[0,0,-.45]}><mesh castShadow position={[0,.55,0]}><boxGeometry args={[.09,1.1,.045]}/><meshStandardMaterial color="#c7d4df" metalness={0.8} roughness={0.25}/></mesh><mesh position={[0,-.05,0]}><cylinderGeometry args={[.045,.045,.28,8]}/><meshStandardMaterial color="#60402b"/></mesh></group>;
  if(/key|chave|schluessel|schlüssel/.test(name)) return <group position={[x,1,z]}><mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[.16,.035,8,16]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh><mesh position={[.23,0,0]}><boxGeometry args={[.4,.06,.05]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
- if(/door|porta|tuer|tür/.test(name)) return <group position={[x,1.2,z]} rotation={[0,/open|opened|abr|abert/i.test(action)?Math.sin(t*2)*.7:0,0]}><mesh castShadow><boxGeometry args={[1.1,2.4,.12]}/><meshStandardMaterial color="#69452e"/></mesh><mesh position={[.38,0,.09]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
+ if(/door|porta|tuer|tür/.test(name)) return <group position={[x,1.2,z]} rotation={[0,/open|opened|abr|abert|oeff|öffnet/i.test(action)?Math.sin(t*2)*.7:0,0]}><mesh castShadow><boxGeometry args={[1.1,2.4,.12]}/><meshStandardMaterial color="#69452e"/></mesh><mesh position={[.38,0,.09]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
  return <group position={[x,.55,z]}><mesh castShadow><boxGeometry args={[.85,1.05,.85]}/><meshStandardMaterial color="#806044" roughness={0.9}/></mesh><mesh position={[0,0,.44]}><boxGeometry args={[.9,.08,.035]}/><meshStandardMaterial color="#b58b5b"/></mesh></group>;
 };
 
@@ -121,7 +121,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
   <group position={[cameraX*.3,0,0]}>
-    {modelFile ? <Suspense fallback={<Character frame={frame} fps={fps} action={action} expression={expression}/> }><GLBCharacter url={modelFile} frame={frame} fps={fps} action={action}/></Suspense> : <Character frame={frame} fps={fps} action={action}/>}
+    {modelFile ? <Suspense fallback={<Character frame={frame} fps={fps} action={action} expression={expression}/> }><GLBCharacter url={modelFile} frame={frame} fps={fps} action={action}/></Suspense> : <Character frame={frame} fps={fps} action={action} expression={expression}/>}
     {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={frame} fps={fps} action={action}/>)}
   </group>
  </>;
