@@ -2,7 +2,7 @@
 
 Editor e motor local de produção audiovisual, com objetivo de automatizar vídeos híbridos 2D/3D a partir de roteiro e narração.
 
-## Estado atual — Beta 0.3
+## Estado atual — Beta 0.5 (protótipo visual 2D)
 
 ### Interface web
 - Editor de roteiro e parser inicial de cenas.
@@ -29,7 +29,7 @@ npm run dev
 Abra o endereço local exibido pelo Vite.
 
 ## Renderização MP4
-Requer Python 3.10+ e FFmpeg/FFprobe instalados no PATH do Windows. Consulte [engine/README.md](engine/README.md).
+Requer Python 3.10+, FFmpeg/FFprobe no PATH e Pillow. Instale Pillow com `python -m pip install -r engine/requirements.txt`. Consulte [engine/README.md](engine/README.md).
 
 Comando básico:
 
