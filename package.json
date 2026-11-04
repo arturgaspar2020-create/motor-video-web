@@ -16,7 +16,13 @@
     "react-dom": "latest",
     "lucide-react": "^0.468.0",
     "busboy": "^1.6.0",
-    "three": "^0.180.0"
+    "three": "^0.180.0",
+    "remotion": "^4.0.0",
+    "@remotion/bundler": "^4.0.0",
+    "@remotion/renderer": "^4.0.0",
+    "@remotion/three": "^4.0.0",
+    "@react-three/fiber": "^9.0.0",
+    "@types/three": "^0.180.0"
   },
   "devDependencies": {
     "@types/react": "latest",
