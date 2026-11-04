@@ -72,6 +72,9 @@ def parse_script(source: str) -> tuple[list[dict], list[str]]:
                 warnings.append(f"Linha {line_no}: marcador fora de uma cena: {line}")
             else:
                 key, value = marker.group(1).lower(), marker.group(2).strip()
+                # Accept both the documented ASCII spelling and Portuguese accents.
+                if key == "duração":
+                    key = "duracao"
                 current["directives"].setdefault(key, []).append(value)
             continue
         if current is None:
@@ -186,11 +189,12 @@ def main() -> int:
                 frames = max(1, round(duration * args.fps))
                 if asset is None:
                     # A deliberate placeholder slate, not a fabricated scene.
-                    safe_text = scene["name"].replace(":", " ").replace("'", "")
-                    draw = f"drawtext=text='{safe_text[:90]}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=(h-text_h)/2"
+                    # Keep the no-asset fallback independent of Fontconfig. Some
+                    # Windows FFmpeg builds ship without a usable Fontconfig config,
+                    # which makes drawtext fail before an MP4 can be produced.
                     run(["ffmpeg", "-y", "-f", "lavfi", "-i",
                          f"color=c=0x17263d:s={args.width}x{args.height}:r={args.fps}:d={duration:.4f}",
-                         "-vf", draw, "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                         "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
                          "-r", str(args.fps), str(segment)])
                     print(f"Cena {index}: cartão de identificação (sem asset visual).")
                 else:
