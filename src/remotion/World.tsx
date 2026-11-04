@@ -148,7 +148,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const isWar=/war|batalha|battle|ruins|ruínas|krieg|schlacht/i.test(environment);
  const isOcean=/ocean|sea|mar|oceano|lake|lago|meer|see/i.test(environment);
  const isRiver=/river|rio|stream|ribeiro/i.test(environment);
- const ground=isSnow?"#cbd5df":isDesert?"#a98a58":"#52634c";
+ const ground=isSnow?"#cbd5df":isInterior?"#554b40":isCity?"#666b70":isWar?"#5a554d":isDesert?"#a98a58":"#52634c";
  const sky=isNight?"#101b34":isSnow?"#aebdca":"#91a9bd";
  const t=frame/fps;
  const shotFrame=shot?Math.max(0,frame-Math.round(shot.start*fps)):0;
@@ -176,7 +176,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   {isOcean && <mesh rotation={[-Math.PI/2,0,0]} position={[0,.015,-8]}><planeGeometry args={[100,45]}/><meshStandardMaterial color="#24647a" metalness={0.25} roughness={0.28}/></mesh>}
   {isRiver && <group><mesh rotation={[-Math.PI/2,0,0]} position={[0,.018,-5]}><planeGeometry args={[3.2,100]}/><meshStandardMaterial color="#286b85" metalness={0.18} roughness={0.24}/></mesh>{Array.from({length:18},(_,i)=><mesh key={i} rotation={[-Math.PI/2,0,0]} position={[Math.sin(i*2.4)*.9,.025,-35+i*3.5]}><planeGeometry args={[.55,.035]}/><meshStandardMaterial color="#8fc4d1" transparent opacity={.38}/></mesh>)}</group>}
   {!isCity&&!isInterior&&!isOcean && Array.from({length:9},(_,i)=><mesh key={i} position={[-13+i*3.3,2.5+(i%3)*.8,-13-(i%2)*2]} rotation={[0,i*.5,0]} castShadow><coneGeometry args={[2.8,5+(i%3)*1.2,5]}/><meshStandardMaterial color={isSnow?"#687b8b":"#536d79"} roughness={1}/></mesh>)}
-  {!isCity&&!isInterior&&!isDesert&&!isOcean && Array.from({length:16},(_,i)=><group key={i} rotation={[0,0,Math.sin(t*1.4+i)*.025]}><Tree x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/></group>)}
+  {!isCity&&!isInterior&&!isWar&&!isDesert&&!isOcean && Array.from({length:16},(_,i)=><group key={i} rotation={[0,0,Math.sin(t*1.4+i)*.025]}><Tree x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/></group>)}
   {isCity && Array.from({length:10},(_,i)=><mesh key={i} position={[-11+i*2.5,1.7+(i%3)*.7,-8-(i%2)*3]} castShadow><boxGeometry args={[1.8,3.4+(i%3)*1.4,1.8]}/><meshStandardMaterial color={i%2?"#536171":"#777c82"} roughness={0.95}/></mesh>)}
   {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
