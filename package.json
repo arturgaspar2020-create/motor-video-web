@@ -15,7 +15,8 @@
     "react": "latest",
     "react-dom": "latest",
     "lucide-react": "^0.468.0",
-    "busboy": "^1.6.0"
+    "busboy": "^1.6.0",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@types/react": "latest",
