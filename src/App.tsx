@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { parseScript, countWords } from "./parser";
+import Scene3DPreview from "./Scene3DPreview";
 
 const initial = "@idioma de\n@titulo Die vergessene Expedition\n\n[cena: ambiente | Nebeliger Wald]\n[ambiente: dichter Wald bei Sonnenaufgang]\n[elementos: alte Karte, Rucksack, Taschenlampe]\n[animacao: langsame Kamerafahrt nach vorne]\nNiemand wusste, was sich hinter den Bergen verbarg. Doch an diesem Morgen sollte sich alles verändern.\n\n[cena: personagem | Der Entdecker]\n[posicoes: Figur in der Bildmitte]\n[animacao: Figur hebt die Karte und schaut nach links]\nEr hatte nur eine Karte und drei Tage Zeit, um die Wahrheit zu finden.";
 
@@ -123,7 +124,7 @@ export default function App() {
 
   return <div className="app">
     <header>
-      <div className="logo">🎬 <span>MOTOR VIDEO <small>STUDIO · BETA 0.4</small></span></div>
+      <div className="logo">🎬 <span>MOTOR VIDEO <small>STUDIO · BETA 0.7 · 3D PREVIEW</small></span></div>
       <div className="actions">
         <span className="status">● {status}</span>
         <button onClick={() => projectInput.current?.click()}>Abrir projeto</button>
@@ -134,11 +135,11 @@ export default function App() {
     </header>
     <main>
       <div className="intro">
-        <div><label>ESTÚDIO DE PRODUÇÃO AUTOMÁTICA</label><h1>Transforme seu roteiro<br/><em>em uma produção visual.</em></h1><p>Crie cenas 2D procedurais, adicione narração e exporte MP4 localmente. Animação 3D real ainda está em desenvolvimento.</p></div>
+        <div><label>ESTÚDIO DE PRODUÇÃO AUTOMÁTICA</label><h1>Transforme seu roteiro<br/><em>em uma produção visual.</em></h1><p>Crie cenas, visualize ambientes e personagens 3D em tempo real, adicione narração e exporte MP4 localmente.</p></div>
         <div className="stats"><b>{project.scenes.length}<small>CENAS</small></b><b>{project.scenes.reduce((n, s) => n + countWords(s.narration), 0)}<small>PALAVRAS</small></b><b>{project.scenes.filter(s => s.narration).length}<small>COM NARRAÇÃO</small></b></div>
       </div>
       <div className="grid">
-        <section className="panel"><h2>✎ ROTEIRO</h2><textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/><div className="muted">Use [cena: tipo | nome] para iniciar cada cena. Sem [asset], o motor cria uma animação procedural 2D básica. Com [asset: media/imagem.jpg], usa seu arquivo. Duração opcional: [duracao: 8].</div></section>
+        <section className="panel"><h2>✎ ROTEIRO</h2><textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/><div className="muted">Use [cena: tipo | nome] para iniciar cada cena. A prévia 3D procedural interpreta as diretivas básicas. O render MP4 ainda usa o renderizador atual. Duração opcional: [duracao: 8].</div></section>
         <section className="panel">
           <h2>▣ PRÉ-VISUALIZAÇÃO <span className="live">ESTRUTURAL</span></h2>
           <div className={"preview " + (ratio === "9:16" ? "vertical" : "")}><div className="sceneLabel">CENA {String(scene?.id || 0).padStart(2, "0")}</div><div className="center"><div className="play">▶</div><b>{scene?.name || "Adicione uma cena ao roteiro"}</b><small>{scene?.type || "Aguardando conteúdo"}</small></div><div className="bottom">{ratio} · {fps} FPS</div></div>
@@ -177,7 +178,7 @@ export default function App() {
       </section>
 
       <section className="panel details"><h2>DETALHES DA CENA</h2>{scene ? <><h3>{scene.name}</h3><div className="chips">{scene.directives.map((directive, index) => <span key={index}>{directive}</span>)}</div><label>NARRAÇÃO</label><p>{scene.narration || "Nenhuma fala vinculada."}</p></> : <p className="muted">Selecione uma cena.</p>}{project.warnings.map((warning, index) => <p className="warning" key={index}>{warning}</p>)}</section>
-      <footer>MOTOR VIDEO STUDIO · BETA 0.4 <span>Histórico de renderização · relatórios de diagnóstico · renderização local</span></footer>
+      <footer>MOTOR VIDEO STUDIO · BETA 0.7 <span>Histórico de renderização · relatórios de diagnóstico · renderização local</span></footer>
     </main>
   </div>;
 }
