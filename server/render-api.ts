@@ -69,16 +69,18 @@ export function renderApi(): Plugin {
         if (req.method === "POST" && !id) {
           void (async () => {
             const workDir = await fs.mkdtemp(path.join(os.tmpdir(), "motor-video-studio-"));
-            let audioPath = "";
+            let audioPath = "";\n            let modelPath = "";
             const fields: Record<string, string> = {};
             const writes: Promise<unknown>[] = [];
             try {
-              const bb = Busboy({ headers: req.headers, limits: { files: 1, fileSize: 1024 * 1024 * 1024, fields: 10 } });
+              const bb = Busboy({ headers: req.headers, limits: { files: 2, fileSize: 1024 * 1024 * 1024, fields: 10 } });
               bb.on("field", (name, value) => { fields[name] = value; });
               bb.on("file", (name, stream, info) => {
-                if (name !== "audio") { stream.resume(); return; }
-                audioPath = path.join(workDir, path.basename(info.filename || "narration.mp3"));
-                writes.push(pipeline(stream, createWriteStream(audioPath)));
+                if (name !== "audio" && name !== "model") { stream.resume(); return; }
+                const safeName = path.basename(info.filename || (name === "audio" ? "narration.mp3" : "character.glb"));
+                if (name === "audio") audioPath = path.join(workDir, safeName);
+                if (name === "model") modelPath = path.join(workDir, safeName);
+                writes.push(pipeline(stream, createWriteStream(path.join(workDir, safeName))));
               });
               await new Promise<void>((resolve, reject) => {
                 bb.on("close", resolve);
@@ -106,7 +108,7 @@ export function renderApi(): Plugin {
               const renderer = path.resolve(process.cwd(), "engine", "render-3d.mjs");
               const child = spawn(process.execPath,
                 [renderer, "--project", projectPath, "--audio", audioPath, "--output", outputPath,
-                  "--width", String(width), "--height", String(height), "--fps", String(fps)],
+                  "--width", String(width), "--height", String(height), "--fps", String(fps), ...(modelPath ? ["--model", modelPath] : [])],
                 { cwd: process.cwd(), windowsHide: true });
               job.child = child;
               child.stdout.on("data", chunk => appendLog(job, chunk.toString()));
