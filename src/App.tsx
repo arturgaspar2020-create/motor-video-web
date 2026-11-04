@@ -141,9 +141,9 @@ export default function App() {
       <div className="grid">
         <section className="panel"><h2>✎ ROTEIRO</h2><textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/><div className="muted">Use [cena: tipo | nome] para iniciar cada cena. A prévia 3D procedural interpreta as diretivas básicas. O render MP4 ainda usa o renderizador atual. Duração opcional: [duracao: 8].</div></section>
         <section className="panel">
-          <h2>▣ PRÉ-VISUALIZAÇÃO <span className="live">ESTRUTURAL</span></h2>
-          <div className={"preview " + (ratio === "9:16" ? "vertical" : "")}><div className="sceneLabel">CENA {String(scene?.id || 0).padStart(2, "0")}</div><div className="center"><div className="play">▶</div><b>{scene?.name || "Adicione uma cena ao roteiro"}</b><small>{scene?.type || "Aguardando conteúdo"}</small></div><div className="bottom">{ratio} · {fps} FPS</div></div>
-          <p className="muted">A prévia é estrutural. O MP4 é produzido pelo renderizador local.</p>
+          <h2>▣ PRÉ-VISUALIZAÇÃO <span className="live">THREE.JS · 3D</span></h2>
+          {scene ? <Scene3DPreview name={scene.name} type={scene.type} directives={scene.directives} ratio={ratio}/> : <div className="preview"><div className="center"><b>Adicione uma cena ao roteiro</b><small>Aguardando conteúdo</small></div></div>}
+          <p className="muted">Prévia 3D em tempo real. A exportação MP4 ainda usa o renderizador anterior; a integração 3D no vídeo é a próxima etapa.</p>
         </section>
       </div>
       <div className="grid lower">
