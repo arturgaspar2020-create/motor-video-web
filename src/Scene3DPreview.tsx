@@ -111,7 +111,8 @@ export default function Scene3DPreview({ name, type, directives, ratio, modelUrl
     const animate = () => {
       frame = requestAnimationFrame(animate);
       const t = clock.getElapsedTime();
-      if (modelMixer) modelMixer.setTime(t);\n      if (modelRoot) actor.visible = false;
+      if (modelMixer) modelMixer.setTime(t);
+      if (modelRoot) actor.visible = false;
       const moving = /corr|camin|andar|run|walk|fug/i.test(actionText + " " + type);
       actor.position.y = moving ? Math.abs(Math.sin(t * 5)) * .09 : Math.sin(t * 1.4) * .025;
       actor.rotation.y = Math.sin(t * .45) * .12;
@@ -136,7 +137,8 @@ export default function Scene3DPreview({ name, type, directives, ratio, modelUrl
     return () => {
       disposed = true;
       cancelAnimationFrame(frame); observer.disconnect();
-      if (modelRoot) { scene.remove(modelRoot); modelRoot.traverse(object => { const mesh=object as THREE.Mesh; if(mesh.geometry) mesh.geometry.dispose(); if(mesh.material){const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];mats.forEach(material=>material.dispose());} }); }\n      modelMixer?.stopAllAction();
+      if (modelRoot) { scene.remove(modelRoot); modelRoot.traverse(object => { const mesh=object as THREE.Mesh; if(mesh.geometry) mesh.geometry.dispose(); if(mesh.material){const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];mats.forEach(material=>material.dispose());} }); }
+      modelMixer?.stopAllAction();
       scene.traverse(object => {
         const mesh = object as THREE.Mesh;
         if (mesh.geometry) mesh.geometry.dispose();
