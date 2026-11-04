@@ -124,7 +124,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const shotDuration=shot?Math.max(.1,shot.end-shot.start):5;
  const localMotionTime=shotFrame/fps;
  const motion=inferMotion(action);
- const actorTravel=motion==="run"?Math.min(2.7*shotDuration,localMotionTime*2.7):motion==="walk"?Math.min(1.15*shotDuration,localMotionTime*1.15):0;
+ const actorTravel=motion==="run"?Math.min(3.2,localMotionTime*2.7):motion==="walk"?Math.min(3.2,localMotionTime*1.15):0;
  const cameraX=interpolate(shotProgress,[0,1],[-.35,.35]);
  return <>
   <color attach="background" args={[sky]}/>
@@ -142,7 +142,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
   <group position={[cameraX*.3+actorX,0,-actorTravel]}>
     {modelFile ? <Suspense fallback={<Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/> }><GLBCharacter url={modelFile} frame={shotFrame} fps={fps} action={action} duration={shotDuration}/></Suspense> : <Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/>}
-    {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={frame} fps={fps} action={action}/>)}
+    {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={shotFrame} fps={fps} action={action}/>) }
   </group>
  </>;
 };
