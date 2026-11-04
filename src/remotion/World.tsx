@@ -13,21 +13,25 @@ const Tree:React.FC<{x:number;z:number;scale?:number}> = ({x,z,scale=1}) => <gro
 </group>;
 
 const Character:React.FC<{frame:number;fps:number;action:string;expression?:string;duration?:number}> = ({frame,fps,action,expression="",duration=5}) => {
- const motion=inferMotion(action);\n const walking=motion==="walk"||motion==="run";\n const running=motion==="run";
+ const motion=inferMotion(action);
+ const walking=motion==="walk"||motion==="run";
+ const running=motion==="run";
  const jumping=/jump|salta|pula|spring|springen|springt|huepft|hüpft/i.test(action);
  const waving=/wave|acen|winken|saluda|winkt/i.test(action);
  const pointing=/point|aponta|zeigt|indica/i.test(action);
  const crouching=/crouch|agacha|ajoelha|kneel|kniet|duckt/i.test(action);
  const t=frame/fps;
+ const progress=motionProgress(t,duration);
+ const travel=walking?Math.min(duration*(running?2.7:1.15),t*(running?2.7:1.15)):0;
  const happy=/happy|feliz|sorr|freude|glueck/i.test(expression);
  const surprised=/surpres|surprise|medo|fear|erschrocken|shock/i.test(expression);
  const sad=/triste|sad|traurig/i.test(expression);
  const mouthScale: [number,number,number]=surprised?[.12,.14,.035]:happy?[.15,.065,.035]:sad?[.13,.035,.035]:[.12,.025,.03];
- const swing=walking?Math.sin(t*5.8)*.52:Math.sin(t*1.2)*.025;
- const bounce=jumping?Math.abs(Math.sin(t*3.1))*.55:walking?Math.abs(Math.sin(t*5.8))*.07:0;
+ const swing=walking?Math.sin(t*(running?8:5.8))*(running?.72:.52):Math.sin(t*1.2)*.025;
+ const bounce=jumping?Math.abs(Math.sin(t*3.1))*.55:walking?Math.abs(Math.sin(t*(running?8:5.8)))*(running?.13:.07):0;
  const armLeft: [number,number,number]=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:[swing,0,0];
  const armRight: [number,number,number]=pointing?[0,0,.8]:[walking?-swing:0,0,0];
- return <group position={[0,bounce-(crouching ? 0.45 : 0),-travel]} rotation={[0,(motion==="turn"?progress*Math.PI*.75:Math.sin(t*.35)*.1),0]}>
+ return <group position={[0,bounce-(crouching ? 0.45 : 0),0]} rotation={[0,(motion==="turn"?progress*Math.PI*.75:Math.sin(t*.35)*.1),0]}>
    <mesh position={[0,1.45,0]} castShadow><capsuleGeometry args={[.43,.85,5,12]}/><meshStandardMaterial color="#b96b43" roughness={.76}/></mesh>
    <mesh position={[0,1.98,0]} castShadow><cylinderGeometry args={[.16,.17,.28,12]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
    <mesh position={[0,1.86,.32]}><boxGeometry args={[.48,.12,.08]}/><meshStandardMaterial color="#e0c9a7"/></mesh>
@@ -116,14 +120,20 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const ground=isSnow?"#cbd5df":isDesert?"#a98a58":"#52634c";
  const sky=isNight?"#101b34":isSnow?"#aebdca":"#91a9bd";
  const t=frame/fps;
- const shotProgress=shot?interpolate(seconds,[shot.start,Math.max(shot.start+.001,shot.end)],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp"}):0;\n const shotFrame=shot?Math.max(0,frame-Math.round(shot.start*fps)):0;\n const shotDuration=shot?Math.max(.1,shot.end-shot.start):5;\n const localMotionTime=shotFrame/fps;\n const motion=inferMotion(action);\n const actorTravel=motion==="run"?Math.min(2.7*shotDuration,localMotionTime*2.7):motion==="walk"?Math.min(1.15*shotDuration,localMotionTime*1.15):0;
+ const shotProgress=shot?interpolate(seconds,[shot.start,Math.max(shot.start+.001,shot.end)],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp"}):0;
+ const shotFrame=shot?Math.max(0,frame-Math.round(shot.start*fps)):0;
+ const shotDuration=shot?Math.max(.1,shot.end-shot.start):5;
+ const localMotionTime=shotFrame/fps;
+ const motion=inferMotion(action);
+ const actorTravel=motion==="run"?Math.min(2.7*shotDuration,localMotionTime*2.7):motion==="walk"?Math.min(1.15*shotDuration,localMotionTime*1.15):0;
  const cameraX=interpolate(shotProgress,[0,1],[-.35,.35]);
  return <>
   <color attach="background" args={[sky]}/>
   <fog attach="fog" args={[sky,17,48]}/>
   <hemisphereLight args={["#c9e4ff","#514333",2.0]}/>
   <directionalLight position={[-5,9,6]} intensity={isNight?1.1:3.1} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024}/>
-  <directionalLight position={[5,4,-5]} color="#8cbcff" intensity={1.4}/>\n  {isNight && <pointLight position={[0,3,2]} color="#ffb36b" intensity={1.2} distance={10}/>}
+  <directionalLight position={[5,4,-5]} color="#8cbcff" intensity={1.4}/>
+  {isNight && <pointLight position={[0,3,2]} color="#ffb36b" intensity={1.2} distance={10}/>}
   <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.05,0]} receiveShadow><planeGeometry args={[100,100]}/><meshStandardMaterial color={ground} roughness={1}/></mesh>
   {isOcean && <mesh rotation={[-Math.PI/2,0,0]} position={[0,.015,-8]}><planeGeometry args={[100,45]}/><meshStandardMaterial color="#24647a" metalness={0.25} roughness={0.28}/></mesh>}
   {!isCity&&!isInterior&&!isOcean && Array.from({length:9},(_,i)=><mesh key={i} position={[-13+i*3.3,2.5+(i%3)*.8,-13-(i%2)*2]} rotation={[0,i*.5,0]} castShadow><coneGeometry args={[2.8,5+(i%3)*1.2,5]}/><meshStandardMaterial color={isSnow?"#687b8b":"#536d79"} roughness={1}/></mesh>)}
@@ -131,7 +141,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   {isCity && Array.from({length:10},(_,i)=><mesh key={i} position={[-11+i*2.5,1.7+(i%3)*.7,-8-(i%2)*3]} castShadow><boxGeometry args={[1.8,3.4+(i%3)*1.4,1.8]}/><meshStandardMaterial color={i%2?"#536171":"#777c82"} roughness={0.95}/></mesh>)}
   {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
-  <group position={[cameraX*.3+actorX,0,0]}>
+  <group position={[cameraX*.3+actorX,0,-actorTravel]}>
     {modelFile ? <Suspense fallback={<Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/> }><GLBCharacter url={modelFile} frame={shotFrame} fps={fps} action={action} duration={shotDuration}/></Suspense> : <Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/>}
     {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={frame} fps={fps} action={action}/>)}
   </group>
