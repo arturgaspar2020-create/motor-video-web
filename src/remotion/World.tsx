@@ -3,7 +3,7 @@ import {useFrame, useThree} from "@react-three/fiber";
 import {useGLTF} from "@react-three/drei";
 import * as THREE from "three";
 import {clone as cloneSkeleton} from "three/examples/jsm/utils/SkeletonUtils.js";
-import {useCurrentFrame, useVideoConfig, interpolate} from "remotion";
+import {useCurrentFrame, useVideoConfig} from "remotion";
 import type {Shot} from "./Video";
 import {inferMotion, motionProgress} from "./motion";
 
