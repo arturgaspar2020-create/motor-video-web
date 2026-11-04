@@ -96,8 +96,10 @@ function parseScript(source) {
     const line=raw.trim(); if(!line || line.startsWith("@"))return;
     const match=line.match(/^\[cena:\s*([^\]|]+)(?:\|\s*([^\]]+))?\]$/i);
     if(match){flush();current={id:scenes.length+1,type:match[1].trim(),name:(match[2]||match[1]).trim(),directives:{},shotDirectives:[],narration:[]};return;}
+    const shotMarker=line.match(/^\[shot:\s*(\{.*\})\]$/i);
+    if(shotMarker){if(current){try{current.shotDirectives.push(JSON.parse(shotMarker[1]));}catch{console.log("AVISO: marcador [shot:] inválido na linha "+(index+1));}}else warnings.push("Marcador fora de cena na linha "+(index+1));return;}
     const marker=line.match(/^\[([^:]+):\s*([^\]]*)\]$/);
-    if(marker){if(current){const key=marker[1].trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");if(key==="shot"){try{current.shotDirectives.push(JSON.parse(marker[2].trim()));}catch{console.log("AVISO: marcador [shot:] inválido na linha "+(index+1));}}else (current.directives[key]??=[]).push(marker[2].trim());}else warnings.push("Marcador fora de cena na linha "+(index+1));return;}
+    if(marker){if(current){const key=marker[1].trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");(current.directives[key]??=[]).push(marker[2].trim());}else warnings.push("Marcador fora de cena na linha "+(index+1));return;}
     if(current)current.narration.push(raw);else warnings.push("Texto antes da primeira cena na linha "+(index+1));
   });
   flush(); return {scenes,warnings};
