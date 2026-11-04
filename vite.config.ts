@@ -4,8 +4,5 @@ import { renderApi } from "./server/render-api";
 
 export default defineConfig({
   plugins: [react(), renderApi()],
-  server: {
-    host: "0.0.0.0",
-    bodySizeLimit: 1024 * 1024 * 1024
-  }
+  server: { host: "0.0.0.0" }
 });
