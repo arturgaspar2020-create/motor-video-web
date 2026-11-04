@@ -63,6 +63,18 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> 
  return <primitive object={model} position={[0,0,0]} />;
 };
 
+const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;action:string}> = ({label,index,frame,fps,action}) => {
+ const name=label.toLowerCase();
+ const x=(index%3-1)*1.35+.9, z=.25+Math.floor(index/3)*.65;
+ const t=frame/fps;
+ if(/map|carta|paper|papel|book|livro|document/.test(name)) return <group position={[x,1.55,z]} rotation={[.12,0,Math.sin(t)*.025]}><mesh castShadow><boxGeometry args={[.65,.035,.82]}/><meshStandardMaterial color="#e6d4a6"/></mesh><mesh position={[0,.025,0]}><boxGeometry args={[.48,.008,.62]}/><meshStandardMaterial color="#b49a67"/></mesh></group>;
+ if(/lantern|lanterna|torch|tocha/.test(name)) return <group position={[x,.8,z]}><mesh castShadow><cylinderGeometry args={[.16,.19,.38,12]}/><meshStandardMaterial color="#a66b32" metalness:.5/></mesh><mesh position={[0,.28,0]}><sphereGeometry args={[.13,12,10]}/><meshStandardMaterial color="#ffb24c" emissive="#ff8c22" emissiveIntensity={2}/></mesh><pointLight position={[0,.35,0]} color="#ff9c43" intensity={2.5} distance={5}/></group>;
+ if(/sword|espada|knife|faca/.test(name)) return <group position={[x,.9,z]} rotation={[0,0,-.45]}><mesh castShadow position={[0,.55,0]}><boxGeometry args={[.09,1.1,.045]}/><meshStandardMaterial color="#c7d4df" metalness:.8 roughness:.25/></mesh><mesh position={[0,-.05,0]}><cylinderGeometry args={[.045,.045,.28,8]}/><meshStandardMaterial color="#60402b"/></mesh></group>;
+ if(/key|chave/.test(name)) return <group position={[x,1,z]}><mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[.16,.035,8,16]}/><meshStandardMaterial color="#d9b45b" metalness:.8/></mesh><mesh position={[.23,0,0]}><boxGeometry args={[.4,.06,.05]}/><meshStandardMaterial color="#d9b45b" metalness:.8/></mesh></group>;
+ if(/door|porta/.test(name)) return <group position={[x,1.2,z]} rotation={[0,/open|opened|abr|abert/i.test(action)?Math.sin(t*2)*.7:0,0]}><mesh castShadow><boxGeometry args={[1.1,2.4,.12]}/><meshStandardMaterial color="#69452e"/></mesh><mesh position={[.38,0,.09]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#d9b45b" metalness:.8/></mesh></group>;
+ return <group position={[x,.55,z]}><mesh castShadow><boxGeometry args={[.85,1.05,.85]}/><meshStandardMaterial color="#806044" roughness:.9/></mesh><mesh position={[0,0,.44]}><boxGeometry args={[.9,.08,.035]}/><meshStandardMaterial color="#b58b5b"/></mesh></group>;
+};
+
 export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const frame=useCurrentFrame();
  const {fps}=useVideoConfig();
@@ -73,6 +85,10 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const isNight=/night|noite|escuro|dark/i.test(environment+" "+(shot?.lighting||""));
  const isDesert=/desert|deserto|sand|areia/i.test(environment);
  const isSnow=/snow|neve|gelo|ice/i.test(environment);
+ const isCity=/city|cidade|street|rua|urban|urbano/i.test(environment);
+ const isInterior=/inside|interior|room|quarto|casa|office|escritório/i.test(environment);
+ const isWar=/war|batalha|battle|ruins|ruínas/i.test(environment);
+ const isOcean=/ocean|sea|mar|oceano|lake|lago/i.test(environment);
  const ground=isSnow?"#cbd5df":isDesert?"#a98a58":"#52634c";
  const sky=isNight?"#101b34":isSnow?"#aebdca":"#91a9bd";
  const t=frame/fps;
@@ -85,15 +101,15 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   <directionalLight position={[-5,9,6]} intensity={isNight?1.1:3.1} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024}/>
   <directionalLight position={[5,4,-5]} color="#8cbcff" intensity={1.4}/>
   <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.05,0]} receiveShadow><planeGeometry args={[100,100]}/><meshStandardMaterial color={ground} roughness={1}/></mesh>
-  {Array.from({length:9},(_,i)=><mesh key={i} position={[-13+i*3.3,2.5+(i%3)*.8,-13-(i%2)*2]} rotation={[0,i*.5,0]} castShadow><coneGeometry args={[2.8,5+(i%3)*1.2,5]}/><meshStandardMaterial color={isSnow?"#687b8b":"#536d79"} roughness={1}/></mesh>)}
-  {Array.from({length:16},(_,i)=><Tree key={i} x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/>)}
+  {isOcean && <mesh rotation={[-Math.PI/2,0,0]} position={[0,.015,-8]}><planeGeometry args={[100,45]}/><meshStandardMaterial color="#24647a" metalness:.25 roughness:.28/></mesh>}
+  {!isCity&&!isInterior&&!isOcean && Array.from({length:9},(_,i)=><mesh key={i} position={[-13+i*3.3,2.5+(i%3)*.8,-13-(i%2)*2]} rotation={[0,i*.5,0]} castShadow><coneGeometry args={[2.8,5+(i%3)*1.2,5]}/><meshStandardMaterial color={isSnow?"#687b8b":"#536d79"} roughness={1}/></mesh>)}
+  {!isCity&&!isInterior&&!isDesert&&!isOcean && Array.from({length:16},(_,i)=><Tree key={i} x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/>)}
+  {isCity && Array.from({length:10},(_,i)=><mesh key={i} position={[-11+i*2.5,1.7+(i%3)*.7,-8-(i%2)*3]} castShadow><boxGeometry args={[1.8,3.4+(i%3)*1.4,1.8]}/><meshStandardMaterial color={i%2?"#536171":"#777c82"} roughness:.95/></mesh>)}
+  {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
+  {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
   <group position={[cameraX*.3,0,0]}>
     {modelFile ? <Suspense fallback={<Character frame={frame} fps={fps} action={action}/> }><GLBCharacter url={modelFile} frame={frame} fps={fps} action={action}/></Suspense> : <Character frame={frame} fps={fps} action={action}/>}
-    {/map|carta|papel|document/i.test((shot?.objects||[]).join(" ")+" "+action) && <group position={[1.15,1.6,.15]} rotation={[.2,0,-.1]}>
-      <mesh castShadow><boxGeometry args={[.55,.035,.72]}/><meshStandardMaterial color="#e5d5a7"/></mesh>
-      <mesh position={[0,.025,0]}><boxGeometry args={[.32,.01,.48]}/><meshStandardMaterial color="#947e54"/></mesh>
-    </group>}
-    {/lantern|lanterna|torch|tocha/i.test((shot?.objects||[]).join(" ")) && <pointLight position={[.8,2,.3]} color="#ff9c43" intensity={3} distance={5}/>}
+    {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={frame} fps={fps} action={action}/>)}
   </group>
  </>;
 };
