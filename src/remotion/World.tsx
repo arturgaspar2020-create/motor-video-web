@@ -28,18 +28,26 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
  const armRight: [number,number,number]=pointing?[0,0,.8]:[walking?-swing:0,0,0];
  return <group position={[0,bounce-(crouching ? 0.45 : 0),0]} rotation={[0,Math.sin(t*.35)*.1,0]}>
    <mesh position={[0,1.45,0]} castShadow><capsuleGeometry args={[.43,.85,5,12]}/><meshStandardMaterial color="#b96b43" roughness={.76}/></mesh>
+   <mesh position={[0,1.98,0]} castShadow><cylinderGeometry args={[.16,.17,.28,12]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
+   <mesh position={[0,1.86,.32]}><boxGeometry args={[.48,.12,.08]}/><meshStandardMaterial color="#e0c9a7"/></mesh>
+   {[-.14,0,.14].map((x,i)=><mesh key={i} position={[x,1.52-i*.12,.415]}><sphereGeometry args={[.035,8,8]}/><meshStandardMaterial color="#e8c98a" metalness={.45}/></mesh>)}
    <mesh position={[0,2.42,.015]} castShadow><sphereGeometry args={[.39,24,18]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
    <mesh position={[0,2.67,-.02]} castShadow><sphereGeometry args={[.405,24,12]}/><meshStandardMaterial color="#273548" roughness={.95}/></mesh>
+   {[-.38,.38].map((x,i)=><mesh key={i} position={[x,2.39,0]}><sphereGeometry args={[.105,12,10]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>)}
+   <mesh position={[0,2.37,.405]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#c58d68"/></mesh>
+   {[-.14,.14].map((x,i)=><mesh key={i} position={[x,2.54,.37]} rotation={[0,0,(i===0?1:-1)*.08]}><boxGeometry args={[.16,.035,.045]}/><meshStandardMaterial color="#382a24"/></mesh>)}
    {[-.14,.14].map((x,i)=><group key={i}><mesh position={[x,2.43,.36]}><sphereGeometry args={[surprised ? 0.085 : 0.075,12,10]}/><meshStandardMaterial color="#f5f0e6"/></mesh><mesh position={[x,2.43,.423]}><sphereGeometry args={[.033,10,8]}/><meshStandardMaterial color="#202a36"/></mesh></group>)}
    <mesh position={[0,2.27,.36]} scale={mouthScale}><sphereGeometry args={[1,14,10]}/><meshStandardMaterial color="#542d2b"/></mesh>
    <mesh position={[0,1.55,-.43]} castShadow><boxGeometry args={[.62,.72,.28]}/><meshStandardMaterial color="#765036"/></mesh>
+   <mesh position={[-.24,1.58,-.29]} rotation={[0,0,-.22]}><boxGeometry args={[.09,.8,.08]}/><meshStandardMaterial color="#bd9360"/></mesh>
+   <mesh position={[.24,1.58,-.29]} rotation={[0,0,.22]}><boxGeometry args={[.09,.8,.08]}/><meshStandardMaterial color="#bd9360"/></mesh>
    {[-1,1].map((side,i)=><group key={side} position={[side*.53,1.92,0]} rotation={i===0?armLeft:armRight}>
      <mesh position={[0,-.32,0]} castShadow><capsuleGeometry args={[.135,.55,4,9]}/><meshStandardMaterial color="#b96b43"/></mesh>
      <mesh position={[0,-.68,0]} castShadow><sphereGeometry args={[.145,12,10]}/><meshStandardMaterial color="#d8a47e"/></mesh>
    </group>)}
    {[-1,1].map((side,i)=><group key={side} position={[side*.22,1.02,0]} rotation={[i===0?swing:-swing,0,0]}>
      <mesh position={[0,-.42,0]} castShadow><capsuleGeometry args={[.16,.66,4,9]}/><meshStandardMaterial color="#263447"/></mesh>
-     <mesh position={[0,-.83,.12]} castShadow><boxGeometry args={[.3,.16,.48]}/><meshStandardMaterial color="#171f2a"/></mesh>
+     <mesh position={[0,-.83,.12]} castShadow><boxGeometry args={[.34,.2,.52]}/><meshStandardMaterial color="#171f2a"/></mesh>
    </group>)}
  </group>;
 };
