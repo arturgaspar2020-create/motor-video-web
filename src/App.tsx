@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { parseScript, countWords } from "./parser";
 import Scene3DPreview from "./Scene3DPreview";
 
@@ -28,12 +28,19 @@ export default function App() {
   const [rendering, setRendering] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [activeJobId, setActiveJobId] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiStatus, setAiStatus] = useState("Verificando IA local...");
+  const [aiReady, setAiReady] = useState(false);
+  const [aiSummary, setAiSummary] = useState<{scenes:number;shots:number;actions:number;objects:number}|null>(null);
+  const [scriptBeforeAi, setScriptBeforeAi] = useState("");
   const audioInput = useRef<HTMLInputElement>(null);
   const modelInput = useRef<HTMLInputElement>(null);
   const projectInput = useRef<HTMLInputElement>(null);
   const project = useMemo(() => parseScript(script), [script]);
   const scene = project.scenes[selected];
   const activeJob = jobs.find(job => job.id === activeJobId) || jobs[0];
+
+  useEffect(() => { void checkAi(); }, []);
 
   function download(blob: Blob, name: string) {
     const url = URL.createObjectURL(blob);
@@ -67,6 +74,47 @@ export default function App() {
     if (modelUrl) URL.revokeObjectURL(modelUrl);
     setModel(file); setModelUrl(URL.createObjectURL(file)); setStatus("Modelo 3D carregado");
   }
+  async function checkAi() {
+    setAiStatus("Verificando conexão com Ollama...");
+    try {
+      const response = await fetch("/api/ai/status");
+      const data = await response.json();
+      const ready = Boolean(data.online && data.installed);
+      setAiReady(ready);
+      setAiStatus(!data.online ? "Ollama não está aberto" : ready ? "IA local pronta · Qwen3 4B" : "Ollama conectado · falta baixar Qwen3 4B");
+    } catch {
+      setAiReady(false);
+      setAiStatus("Não foi possível verificar a IA local");
+    }
+  }
+
+  async function analyzeScriptWithAi() {
+    if (!script.trim()) { setStatus("Cole um roteiro antes de analisar"); return; }
+    setAiBusy(true);
+    setAiSummary(null);
+    setStatus("IA local analisando roteiro...");
+    try {
+      const response = await fetch("/api/ai/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Falha na análise da IA.");
+      setScriptBeforeAi(script);
+      setScript(data.enhancedScript);
+      setAiSummary(data.summary);
+      setStatus("Análise concluída · plano de animação aplicado ao roteiro");
+      await checkAi();
+    } catch (error) {
+      setStatus("Não foi possível analisar o roteiro");
+      window.alert(error instanceof Error ? error.message : "Erro desconhecido na IA local.");
+      await checkAi();
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
   function updateJob(updated: Job) {
     setJobs(previous => {
       const exists = previous.some(item => item.id === updated.id);
@@ -152,7 +200,17 @@ export default function App() {
         <div className="stats"><b>{project.scenes.length}<small>CENAS</small></b><b>{project.scenes.reduce((n, s) => n + countWords(s.narration), 0)}<small>PALAVRAS</small></b><b>{project.scenes.filter(s => s.narration).length}<small>COM NARRAÇÃO</small></b></div>
       </div>
       <div className="grid">
-        <section className="panel"><h2>✎ ROTEIRO</h2><textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/><div className="muted">Use [cena: tipo | nome] para iniciar cada cena. A prévia e o MP4 usam o renderizador 3D. Use [acao:], [ambiente:], [elementos:], [camera:] e [animacao:] para dirigir as cenas. Duração opcional: [duracao: 8].</div></section>
+        <section className="panel"><h2>✎ ROTEIRO</h2>
+          <div className="ai-box">
+            <div className="ai-top"><div><b>✦ DIRETOR DE IA LOCAL</b><small>{aiStatus}</small></div><button onClick={checkAi} disabled={aiBusy}>Verificar IA</button></div>
+            <p>A IA lê cada frase e identifica ações, personagens, objetos e enquadramentos. A análise roda no seu PC, sem API paga.</p>
+            <button className="primary ai-analyze" onClick={analyzeScriptWithAi} disabled={aiBusy}>{aiBusy ? "✦ ANALISANDO ROTEIRO..." : "✦ ANALISAR ROTEIRO COM IA"}</button>
+            {aiSummary && <div className="ai-result"><b>PLANO APLICADO AO ROTEIRO</b><span>{aiSummary.scenes} cenas · {aiSummary.shots} planos · {aiSummary.actions} ações · {aiSummary.objects} tipos de objetos</span>{scriptBeforeAi && <button onClick={() => {setScript(scriptBeforeAi);setScriptBeforeAi("");setAiSummary(null);setStatus("Roteiro anterior restaurado");}}>Desfazer análise</button>}</div>}
+            {!aiReady && <small className="ai-help">Para ativar: instale o Ollama e execute instalar-ia-local.bat na pasta do projeto. Depois clique em Verificar IA.</small>}
+          </div>
+          <textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/>
+          <div className="muted">Use [cena: tipo | nome] para iniciar cada cena. A IA adiciona [shot:] por frase sem reescrever a narração. Você também pode usar [acao:], [ambiente:], [elementos:], [camera:] e [animacao:] manualmente.</div>
+        </section>
         <section className="panel">
           <h2>▣ PRÉ-VISUALIZAÇÃO <span className="live">THREE.JS · 3D</span></h2>
           {scene ? <Scene3DPreview name={scene.name} type={scene.type} directives={scene.directives} ratio={ratio} modelUrl={modelUrl || undefined}/> : <div className="preview"><div className="center"><b>Adicione uma cena ao roteiro</b><small>Aguardando conteúdo</small></div></div>}
