@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import * as THREE from "three";\nimport { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 type Props = { name: string; type: string; directives: string[]; ratio: "16:9" | "9:16" | "1:1"; modelUrl?: string };
 
@@ -109,7 +110,8 @@ export default function Scene3DPreview({ name, type, directives, ratio, modelUrl
     let frame = 0;
     const animate = () => {
       frame = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();\n      if (modelMixer) modelMixer.setTime(t);\n      if (modelRoot) actor.visible = false;
+      const t = clock.getElapsedTime();
+      if (modelMixer) modelMixer.setTime(t);\n      if (modelRoot) actor.visible = false;
       const moving = /corr|camin|andar|run|walk|fug/i.test(actionText + " " + type);
       actor.position.y = moving ? Math.abs(Math.sin(t * 5)) * .09 : Math.sin(t * 1.4) * .025;
       actor.rotation.y = Math.sin(t * .45) * .12;
@@ -132,7 +134,9 @@ export default function Scene3DPreview({ name, type, directives, ratio, modelUrl
     };
     const observer = new ResizeObserver(resize); observer.observe(root);
     return () => {
-      disposed = true;\n      cancelAnimationFrame(frame); observer.disconnect();\n      if (modelRoot) { scene.remove(modelRoot); modelRoot.traverse(object => { const mesh=object as THREE.Mesh; if(mesh.geometry) mesh.geometry.dispose(); if(mesh.material){const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];mats.forEach(material=>material.dispose());} }); }\n      modelMixer?.stopAllAction();
+      disposed = true;
+      cancelAnimationFrame(frame); observer.disconnect();
+      if (modelRoot) { scene.remove(modelRoot); modelRoot.traverse(object => { const mesh=object as THREE.Mesh; if(mesh.geometry) mesh.geometry.dispose(); if(mesh.material){const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];mats.forEach(material=>material.dispose());} }); }\n      modelMixer?.stopAllAction();
       scene.traverse(object => {
         const mesh = object as THREE.Mesh;
         if (mesh.geometry) mesh.geometry.dispose();
