@@ -4,10 +4,13 @@ import { parseScript, countWords } from "./parser";
 const initial = "@idioma de\n@titulo Die vergessene Expedition\n\n[cena: ambiente | Nebeliger Wald]\n[ambiente: dichter Wald bei Sonnenaufgang]\n[elementos: alte Karte, Rucksack, Taschenlampe]\n[animacao: langsame Kamerafahrt nach vorne]\nNiemand wusste, was sich hinter den Bergen verbarg. Doch an diesem Morgen sollte sich alles verändern.\n\n[cena: personagem | Der Entdecker]\n[posicoes: Figur in der Bildmitte]\n[animacao: Figur hebt die Karte und schaut nach links]\nEr hatte nur eine Karte und drei Tage Zeit, um die Wahrheit zu finden.";
 
 type Ratio = "16:9" | "9:16" | "1:1";
+type Job = {
+  id: string; status: "preparing" | "rendering" | "completed" | "error" | "canceled";
+  progress: number; currentScene: number; totalScenes: number; message: string;
+  log: string; createdAt: string; audioName: string; width: number; height: number; fps: number;
+};
 const dimensions: Record<Ratio, [number, number]> = {
-  "16:9": [1920, 1080],
-  "9:16": [1080, 1920],
-  "1:1": [1080, 1080]
+  "16:9": [1920, 1080], "9:16": [1080, 1920], "1:1": [1080, 1080]
 };
 
 export default function App() {
@@ -19,96 +22,108 @@ export default function App() {
   const [fps, setFps] = useState("30");
   const [status, setStatus] = useState("Projeto pronto");
   const [rendering, setRendering] = useState(false);
-  const [renderLog, setRenderLog] = useState("");
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [activeJobId, setActiveJobId] = useState("");
   const audioInput = useRef<HTMLInputElement>(null);
   const projectInput = useRef<HTMLInputElement>(null);
   const project = useMemo(() => parseScript(script), [script]);
   const scene = project.scenes[selected];
+  const activeJob = jobs.find(job => job.id === activeJobId) || jobs[0];
 
   function download(blob: Blob, name: string) {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    const a = document.createElement("a"); a.href = url; a.download = name; a.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
-
   function save() {
-    const blob = new Blob([JSON.stringify({ script, settings: { ratio, fps } }, null, 2)], { type: "application/json" });
-    download(blob, "projeto-motor-video.json");
+    download(new Blob([JSON.stringify({ script, settings: { ratio, fps } }, null, 2)], { type: "application/json" }), "projeto-motor-video.json");
     setStatus("Projeto salvo");
   }
-
   function open(file?: File) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       try {
         const value = JSON.parse(String(reader.result));
-        setScript(value.script || initial);
-        setRatio(value.settings?.ratio || "16:9");
-        setFps(value.settings?.fps || "30");
-        setStatus("Projeto carregado");
-      } catch {
-        setStatus("Arquivo JSON inválido");
-      }
+        setScript(value.script || initial); setRatio(value.settings?.ratio || "16:9");
+        setFps(value.settings?.fps || "30"); setStatus("Projeto carregado");
+      } catch { setStatus("Arquivo JSON inválido"); }
     };
     reader.readAsText(file);
   }
-
   function upload(file?: File) {
     if (!file) return;
     if (audioUrl) URL.revokeObjectURL(audioUrl);
-    setAudio(file);
-    setAudioUrl(URL.createObjectURL(file));
-    setStatus("Áudio carregado");
+    setAudio(file); setAudioUrl(URL.createObjectURL(file)); setStatus("Áudio carregado");
   }
-
+  function updateJob(updated: Job) {
+    setJobs(previous => {
+      const exists = previous.some(item => item.id === updated.id);
+      return exists ? previous.map(item => item.id === updated.id ? updated : item) : [updated, ...previous];
+    });
+  }
   async function render() {
-    if (!audio) {
-      setStatus("Envie a narração antes de renderizar");
-      return;
-    }
-    if (!project.scenes.length) {
-      setStatus("Adicione pelo menos uma cena ao roteiro");
-      return;
-    }
-    setRendering(true);
-    setRenderLog("");
-    setStatus("Preparando renderização...");
+    if (!audio) { setStatus("Envie a narração antes de renderizar"); return; }
+    if (!project.scenes.length) { setStatus("Adicione pelo menos uma cena ao roteiro"); return; }
+    setRendering(true); setStatus("Preparando renderização...");
+    const [width, height] = dimensions[ratio];
+    const data = new FormData();
+    data.append("project", JSON.stringify({ script, settings: { ratio, fps } }));
+    data.append("audio", audio, audio.name); data.append("width", String(width));
+    data.append("height", String(height)); data.append("fps", fps);
+    let jobId = "";
     try {
-      const [width, height] = dimensions[ratio];
-      const data = new FormData();
-      data.append("project", JSON.stringify({ script, settings: { ratio, fps } }));
-      data.append("audio", audio, audio.name);
-      data.append("width", String(width));
-      data.append("height", String(height));
-      data.append("fps", fps);
-      setStatus("Renderizando vídeo no computador...");
       const response = await fetch("/api/render", { method: "POST", body: data });
-      if (!response.ok) {
-        const result = await response.json().catch(() => ({ error: "Falha ao renderizar." }));
-        throw new Error(result.error || "Falha ao renderizar.");
+      const started = await response.json();
+      if (!response.ok) throw new Error(started.error || "Não foi possível iniciar a renderização.");
+      jobId = started.id; setActiveJobId(jobId); updateJob(started);
+      setStatus("Renderizando vídeo no computador...");
+      let current: Job = started;
+      while (current.status === "rendering" || current.status === "preparing") {
+        await new Promise(resolve => window.setTimeout(resolve, 1000));
+        const check = await fetch(`/api/render/${jobId}`);
+        if (!check.ok) throw new Error("Não foi possível consultar o progresso do trabalho.");
+        current = await check.json(); updateJob(current);
       }
-      const log = response.headers.get("X-Render-Log");
-      if (log) {
-        try { setRenderLog(atob(log)); } catch { /* log is optional */ }
-      }
-      const video = await response.blob();
-      download(video, "motor-video-final.mp4");
-      setStatus("Vídeo MP4 gerado!");
+      if (current.status === "completed") setStatus("Vídeo concluído! Baixe na área Vídeos gerados.");
+      else if (current.status === "canceled") setStatus("Renderização interrompida.");
+      else setStatus("Erro na renderização. Abra os detalhes para ver o relatório.");
     } catch (error) {
       setStatus("Erro na renderização");
-      setRenderLog(error instanceof Error ? error.message : "Erro desconhecido");
-    } finally {
-      setRendering(false);
-    }
+      if (jobId) {
+        const found = jobs.find(item => item.id === jobId);
+        if (found) updateJob({ ...found, status: "error", message: error instanceof Error ? error.message : "Erro desconhecido." });
+      }
+      else window.alert(error instanceof Error ? error.message : "Erro desconhecido ao iniciar renderização.");
+    } finally { setRendering(false); }
+  }
+  async function stopRender() {
+    if (!activeJobId) return;
+    try {
+      const response = await fetch(`/api/render/${activeJobId}/cancel`, { method: "POST" });
+      const updated = await response.json(); updateJob(updated); setStatus("Interrupção solicitada...");
+    } catch { setStatus("Não foi possível solicitar a interrupção."); }
+  }
+  function copyReport(job: Job) {
+    const report = [
+      "MOTOR VIDEO STUDIO — RELATÓRIO DE DIAGNÓSTICO",
+      `ID: ${job.id}`, `Data: ${job.createdAt}`, `Status: ${job.status}`,
+      `Mensagem: ${job.message}`, `Progresso: ${job.progress}%`,
+      `Cena: ${job.currentScene}/${job.totalScenes}`, `Áudio: ${job.audioName}`,
+      `Formato: ${job.width}x${job.height} @ ${job.fps} FPS`,
+      "", "LOG COMPLETO:", job.log || "(nenhum log registrado)"
+    ].join("\n");
+    navigator.clipboard.writeText(report).then(() => setStatus("Relatório copiado! Cole aqui na conversa."))
+      .catch(() => window.prompt("Copie o relatório abaixo:", report));
+  }
+  function downloadJob(job: Job) {
+    const a = document.createElement("a"); a.href = `/api/render/${job.id}/download`;
+    a.download = "motor-video-final.mp4"; a.click();
   }
 
   return <div className="app">
     <header>
-      <div className="logo">🎬 <span>MOTOR VIDEO <small>STUDIO · BETA 0.3</small></span></div>
+      <div className="logo">🎬 <span>MOTOR VIDEO <small>STUDIO · BETA 0.4</small></span></div>
       <div className="actions">
         <span className="status">● {status}</span>
         <button onClick={() => projectInput.current?.click()}>Abrir projeto</button>
@@ -140,12 +155,29 @@ export default function App() {
           {audioUrl && <audio controls src={audioUrl}/>}
           <div className="settings"><div><label>FORMATO</label><select value={ratio} onChange={e => setRatio(e.target.value as Ratio)}><option>16:9</option><option>9:16</option><option>1:1</option></select></div><div><label>FPS</label><select value={fps} onChange={e => setFps(e.target.value)}><option>24</option><option>30</option><option>60</option></select></div></div>
           <button className="primary render-wide" onClick={render} disabled={rendering || !audio}>{rendering ? "RENDERIZANDO NO COMPUTADOR..." : "▶ GERAR VÍDEO MP4"}</button>
+          {rendering && <button className="stop-wide" onClick={stopRender}>■ PARAR RENDERIZAÇÃO</button>}
           <div className="muted">O processamento usa Python e FFmpeg instalados no seu computador. Não envia seu roteiro ou áudio para serviços externos.</div>
         </section>
       </div>
+
+      <section className="panel jobs-panel">
+        <h2>▣ VÍDEOS GERADOS <span className="muted">{jobs.filter(job => job.status === "completed").length} concluídos · {jobs.length} trabalhos</span></h2>
+        {jobs.length === 0 && <p className="muted">Ainda não há vídeos nesta sessão. Quando uma renderização terminar, o MP4 aparecerá aqui para baixar.</p>}
+        {jobs.map(job => <article className="job-card" key={job.id}>
+          <div className="job-top"><div><b>{job.status === "completed" ? "Vídeo pronto" : job.status === "rendering" ? "Renderizando..." : job.status === "canceled" ? "Interrompido" : "Falha na renderização"}</b><small>{job.audioName} · {job.width}×{job.height} · {job.fps} FPS</small></div><strong className={"job-status " + job.status}>{job.status === "completed" ? "CONCLUÍDO" : job.status === "rendering" ? "EM ANDAMENTO" : job.status === "canceled" ? "CANCELADO" : "ERRO"}</strong></div>
+          {(job.status === "rendering" || job.status === "completed") && <><div className="progress-track"><div className="progress-fill" style={{ width: job.progress + "%" }}/></div><div className="progress-label">{job.progress}% · {job.currentScene}/{job.totalScenes} cenas · {job.message}</div></>}
+          <div className="job-actions">
+            {job.status === "completed" && <button className="primary" onClick={() => downloadJob(job)}>⬇ BAIXAR MP4</button>}
+            {job.status === "rendering" && <button className="stop-button" onClick={stopRender} disabled={job.id !== activeJobId}>■ Parar</button>}
+            {(job.status === "error" || job.status === "canceled" || job.status === "completed") && <button onClick={() => copyReport(job)}>▣ COPIAR RELATÓRIO</button>}
+            <button onClick={() => setActiveJobId(job.id)}>Ver detalhes</button>
+          </div>
+          {activeJobId === job.id && <div className="job-details"><b>DETALHES DO TRABALHO</b><p>{job.message}</p><pre className="render-log">{job.log || "Nenhum log disponível ainda."}</pre></div>}
+        </article>)}
+      </section>
+
       <section className="panel details"><h2>DETALHES DA CENA</h2>{scene ? <><h3>{scene.name}</h3><div className="chips">{scene.directives.map((directive, index) => <span key={index}>{directive}</span>)}</div><label>NARRAÇÃO</label><p>{scene.narration || "Nenhuma fala vinculada."}</p></> : <p className="muted">Selecione uma cena.</p>}{project.warnings.map((warning, index) => <p className="warning" key={index}>{warning}</p>)}</section>
-      {renderLog && <section className="panel details"><h2>LOG DA RENDERIZAÇÃO</h2><pre className="render-log">{renderLog}</pre></section>}
-      <footer>MOTOR VIDEO STUDIO · BETA 0.3 <span>Renderização local integrada · híbrido 2D/3D em desenvolvimento</span></footer>
+      <footer>MOTOR VIDEO STUDIO · BETA 0.4 <span>Histórico de renderização · relatórios de diagnóstico · renderização local</span></footer>
     </main>
   </div>;
 }
