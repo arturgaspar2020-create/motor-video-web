@@ -20,6 +20,7 @@
   "devDependencies": {
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "@types/busboy": "^1.5.4"
+    "@types/busboy": "^1.5.4",
+    "@types/node": "^22.10.2"
   }
 }
