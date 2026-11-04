@@ -94,6 +94,8 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const shot=shots.find((item,index)=>seconds>=item.start&&(seconds<item.end||index===shots.length-1))||shots[shots.length-1];
  const expression=shot?.expression||"";
  const action=((shot?.action||"")+" "+(shot?.animation||"")).toLowerCase();
+ const positionHint=(shot?.position||"").toLowerCase();
+ const actorX=/left|esquerda|links|izquierda/i.test(positionHint)?-2:/right|direita|rechts|derecha/i.test(positionHint)?2:0;
  const environment=(shot?.environment||shot?.scene_name||"").toLowerCase();
  const isNight=/night|noite|escuro|dark|nacht|dunkel/i.test(environment+" "+(shot?.lighting||""));
  const isDesert=/desert|deserto|sand|areia|wueste|wüste/i.test(environment);
@@ -120,7 +122,7 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   {isCity && Array.from({length:10},(_,i)=><mesh key={i} position={[-11+i*2.5,1.7+(i%3)*.7,-8-(i%2)*3]} castShadow><boxGeometry args={[1.8,3.4+(i%3)*1.4,1.8]}/><meshStandardMaterial color={i%2?"#536171":"#777c82"} roughness={0.95}/></mesh>)}
   {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
-  <group position={[cameraX*.3,0,0]}>
+  <group position={[cameraX*.3+actorX,0,0]}>
     {modelFile ? <Suspense fallback={<Character frame={frame} fps={fps} action={action} expression={expression}/> }><GLBCharacter url={modelFile} frame={frame} fps={fps} action={action}/></Suspense> : <Character frame={frame} fps={fps} action={action} expression={expression}/>}
     {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={frame} fps={fps} action={action}/>)}
   </group>
