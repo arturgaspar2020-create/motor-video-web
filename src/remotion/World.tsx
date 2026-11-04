@@ -84,7 +84,15 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string;du
    if(hint==="sit") return gltf.animations.find(clip=>/sit|sitting/i.test(clip.name));
    if(hint==="jump") return gltf.animations.find(clip=>/jump/i.test(clip.name));
    if(hint==="wave") return gltf.animations.find(clip=>/wave/i.test(clip.name));
-   return gltf.animations.find(clip=>/idle|stand|breath/i.test(clip.name));
+   if(hint==="turn") return gltf.animations.find(clip=>/turn|rotate/i.test(clip.name));
+   if(hint==="look") return gltf.animations.find(clip=>/look|inspect/i.test(clip.name));
+   if(hint==="react") return gltf.animations.find(clip=>/react|surprise|flinch/i.test(clip.name));
+   if(hint==="open") return gltf.animations.find(clip=>/open|door/i.test(clip.name));
+   if(hint==="close") return gltf.animations.find(clip=>/close/i.test(clip.name));
+   if(hint==="pickup") return gltf.animations.find(clip=>/pick|grab|take/i.test(clip.name));
+   if(hint==="drop") return gltf.animations.find(clip=>/drop|throw/i.test(clip.name));
+   if(hint==="idle") return gltf.animations.find(clip=>/idle|stand|breath/i.test(clip.name));
+   return undefined;
   },[gltf.animations,action]);
  useLayoutEffect(()=>{
    mixer.stopAllAction();
