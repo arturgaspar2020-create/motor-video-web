@@ -142,7 +142,7 @@ await fs.writeFile(planPath,JSON.stringify({
 },null,2),"utf8");
 const entryPoint=path.resolve("src/remotion/index.tsx");
 console.log("Preparando composição Remotion + Three.js...");
-const serveUrl=await bundle({entryPoint,publicDir,webpackOverride:config=>config,onProgress:progress=>console.log("BUNDLE "+Math.round(progress*100)+"%")});
+const serveUrl=await bundle({entryPoint,publicDir,outDir:path.join(workDir,"remotion-bundle"),webpackOverride:config=>config,onProgress:progress=>console.log("BUNDLE "+Math.round(progress*100)+"%")});
 const inputProps={shots,audioFile,modelFile,fps,width,height};
 async function renderWithBackend(gl) {
   const composition=await selectComposition({serveUrl,id:"MotorVideo3D",inputProps,logLevel:"error",chromiumOptions:{gl}});
