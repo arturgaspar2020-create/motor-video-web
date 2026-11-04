@@ -28,7 +28,7 @@ export const CinematicVideo: React.FC<CinematicVideoProps> = ({shots, audioFile,
   const actorTravel=walking?Math.min((active?.duration||0)*(running?2.7:1.15),localSeconds*(running?2.7:1.15)):0;
   const cameraX=7+Math.sin(frame*.008)*.35;
   const cameraY=aerial?10:close?3.4:5.2;
-  const cameraZ=(close?6:10)-actorTravel;
+  const cameraZ=close?6:10;
   return <>
     <ThreeCanvas shadows width={width} height={height} camera={{position: [cameraX, cameraY, cameraZ], fov: close?30:38}} gl={{antialias: true, alpha: false, powerPreference: "high-performance"}}>
       <CanvasWorld shots={shots} modelFile={modelFile ? staticFile(modelFile) : undefined}/>
