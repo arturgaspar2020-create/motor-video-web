@@ -90,7 +90,7 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string;du
 };
 
 const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;action:string}> = ({label,index,frame,fps,action}) => {
- const name=label.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
+ const name=label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
  const x=(index%3-1)*1.35+.9, z=.25+Math.floor(index/3)*.65;
  const t=frame/fps;
  const progress=motionProgress(t,1.2);
