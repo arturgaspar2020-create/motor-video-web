@@ -10,14 +10,14 @@ export type Shot = {
   start: number; end: number; duration: number;
 };
 export type CinematicVideoProps = {
-  shots: Shot[]; audioFile: string; fps: number; width: number; height: number;
+  shots: Shot[]; audioFile: string; modelFile?: string; fps: number; width: number; height: number;
 };
 
-export const CinematicVideo: React.FC<CinematicVideoProps> = ({shots, audioFile, width, height}) => {
+export const CinematicVideo: React.FC<CinematicVideoProps> = ({shots, audioFile, modelFile, width, height}) => {
   const active = shots[0];
   return <>
     <ThreeCanvas width={width} height={height} camera={{position: [7, 5.2, 10], fov: 38}} gl={{antialias: true, alpha: false, powerPreference: "high-performance"}}>
-      <CanvasWorld shots={shots}/>
+      <CanvasWorld shots={shots} modelFile={modelFile ? staticFile(modelFile) : undefined}/>
     </ThreeCanvas>
     {audioFile ? <Audio src={staticFile(audioFile)} /> : null}
   </>;
