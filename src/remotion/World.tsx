@@ -57,7 +57,7 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
    </group>)}
    {[-1,1].map((side,i)=><group key={side} position={[side*.22,1.02,0]} rotation={[sitting?-1.05:crouching?-.72:(i===0?swing:-swing),0,0]}>
      <mesh position={[0,-.24,0]} castShadow><capsuleGeometry args={[.145,.38,4,9]}/><meshStandardMaterial color="#263447"/></mesh>
-     <group position={[0,-.46,0]} rotation={[sitting?1.35:crouching?.85:Math.max(0,Math.sin(t*(running?8:5.8)))*.65,0,0]}>
+     <group position={[0,-.46,0]} rotation={[sitting ? 1.35 : crouching ? .85 : Math.max(0,Math.sin(t*(running?8:5.8)))*.65,0,0]}>
        <mesh position={[0,-.22,0]} castShadow><capsuleGeometry args={[.13,.38,4,9]}/><meshStandardMaterial color="#263447"/></mesh>
        <mesh position={[0,-.45,.13]} castShadow><boxGeometry args={[.31,.16,.48]}/><meshStandardMaterial color="#171f2a"/></mesh>
      </group>
