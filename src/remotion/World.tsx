@@ -20,15 +20,15 @@ const Character:React.FC<{frame:number;fps:number;action:string}> = ({frame,fps,
  const t=frame/fps;
  const swing=walking?Math.sin(t*5.8)*.52:Math.sin(t*1.2)*.025;
  const bounce=jumping?Math.abs(Math.sin(t*3.1))*.55:walking?Math.abs(Math.sin(t*5.8))*.07:0;
- const armLeft=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:[swing,0,0];
- const armRight=pointing?[0,0,.8]:[walking?-swing:0,0,0];
- return <group position={[0,bounce-(crouching?.45:0),0]} rotation={[0,Math.sin(t*.35)*.1,0]}>
+ const armLeft: [number,number,number]=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:[swing,0,0];
+ const armRight: [number,number,number]=pointing?[0,0,.8]:[walking?-swing:0,0,0];
+ return <group position={[0,bounce-(crouching ? 0.45 : 0),0]} rotation={[0,Math.sin(t*.35)*.1,0]}>
    <mesh position={[0,1.45,0]} castShadow><capsuleGeometry args={[.43,.85,5,12]}/><meshStandardMaterial color="#b96b43" roughness={.76}/></mesh>
    <mesh position={[0,2.42,.015]} castShadow><sphereGeometry args={[.39,24,18]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
    <mesh position={[0,2.67,-.02]} castShadow><sphereGeometry args={[.405,24,12]}/><meshStandardMaterial color="#273548" roughness={.95}/></mesh>
    {[-.14,.14].map((x,i)=><group key={i}><mesh position={[x,2.43,.36]}><sphereGeometry args={[.075,12,10]}/><meshStandardMaterial color="#f5f0e6"/></mesh><mesh position={[x,2.43,.423]}><sphereGeometry args={[.033,10,8]}/><meshStandardMaterial color="#202a36"/></mesh></group>)}
    <mesh position={[0,1.55,-.43]} castShadow><boxGeometry args={[.62,.72,.28]}/><meshStandardMaterial color="#765036"/></mesh>
-   {[-1,1].map((side,i)=><group key={side} position={[side*.53,1.92,0]} rotation={[i===0?swing:-swing,0,0]}>
+   {[-1,1].map((side,i)=><group key={side} position={[side*.53,1.92,0]} rotation={i===0?armLeft:armRight}>
      <mesh position={[0,-.32,0]} castShadow><capsuleGeometry args={[.135,.55,4,9]}/><meshStandardMaterial color="#b96b43"/></mesh>
      <mesh position={[0,-.68,0]} castShadow><sphereGeometry args={[.145,12,10]}/><meshStandardMaterial color="#d8a47e"/></mesh>
    </group>)}
