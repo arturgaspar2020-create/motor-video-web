@@ -4,6 +4,7 @@ import * as THREE from "three";
 import {clone as cloneSkeleton} from "three/examples/jsm/utils/SkeletonUtils.js";
 import {useCurrentFrame, useVideoConfig, interpolate} from "remotion";
 import type {Shot} from "./Video";
+import {inferMotion, motionProgress} from "./motion";
 
 type Props={shots:Shot[];modelFile?:string};
 const Tree:React.FC<{x:number;z:number;scale?:number}> = ({x,z,scale=1}) => <group position={[x,0,z]} scale={scale}>
@@ -11,8 +12,8 @@ const Tree:React.FC<{x:number;z:number;scale?:number}> = ({x,z,scale=1}) => <gro
   <mesh position={[0,2.1,0]} castShadow><coneGeometry args={[.85,2.3,7]}/><meshStandardMaterial color="#28513e" roughness={1}/></mesh>
 </group>;
 
-const Character:React.FC<{frame:number;fps:number;action:string;expression?:string}> = ({frame,fps,action,expression=""}) => {
- const walking=/walk|run|camin|corr|fug|andar|lauf|geht|wandert|rennt|sprint/i.test(action);
+const Character:React.FC<{frame:number;fps:number;action:string;expression?:string;duration?:number}> = ({frame,fps,action,expression="",duration=5}) => {
+ const motion=inferMotion(action);\n const walking=motion==="walk"||motion==="run";\n const running=motion==="run";
  const jumping=/jump|salta|pula|spring|springen|springt|huepft|hüpft/i.test(action);
  const waving=/wave|acen|winken|saluda|winkt/i.test(action);
  const pointing=/point|aponta|zeigt|indica/i.test(action);
@@ -26,7 +27,7 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
  const bounce=jumping?Math.abs(Math.sin(t*3.1))*.55:walking?Math.abs(Math.sin(t*5.8))*.07:0;
  const armLeft: [number,number,number]=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:[swing,0,0];
  const armRight: [number,number,number]=pointing?[0,0,.8]:[walking?-swing:0,0,0];
- return <group position={[0,bounce-(crouching ? 0.45 : 0),0]} rotation={[0,Math.sin(t*.35)*.1,0]}>
+ return <group position={[0,bounce-(crouching ? 0.45 : 0),-travel]} rotation={[0,(motion==="turn"?progress*Math.PI*.75:Math.sin(t*.35)*.1),0]}>
    <mesh position={[0,1.45,0]} castShadow><capsuleGeometry args={[.43,.85,5,12]}/><meshStandardMaterial color="#b96b43" roughness={.76}/></mesh>
    <mesh position={[0,1.98,0]} castShadow><cylinderGeometry args={[.16,.17,.28,12]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
    <mesh position={[0,1.86,.32]}><boxGeometry args={[.48,.12,.08]}/><meshStandardMaterial color="#e0c9a7"/></mesh>
@@ -52,7 +53,7 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
  </group>;
 };
 
-const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> = ({url,frame,fps,action}) => {
+const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string;duration?:number}> = ({url,frame,fps,action,duration=5}) => {
  const gltf=useGLTF(url);
  const model=useMemo(()=>{
    const copy=cloneSkeleton(gltf.scene);
@@ -91,7 +92,7 @@ const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;acti
  if(/lantern|lanterna|torch|tocha|taschenlampe|laterne/.test(name)) return <group position={[x,.8,z]}><mesh castShadow><cylinderGeometry args={[.16,.19,.38,12]}/><meshStandardMaterial color="#a66b32" metalness={0.5}/></mesh><mesh position={[0,.28,0]}><sphereGeometry args={[.13,12,10]}/><meshStandardMaterial color="#ffb24c" emissive="#ff8c22" emissiveIntensity={2}/></mesh><pointLight position={[0,.35,0]} color="#ff9c43" intensity={2.5} distance={5}/></group>;
  if(/sword|espada|knife|faca|schwert/.test(name)) return <group position={[x,.9,z]} rotation={[0,0,-.45]}><mesh castShadow position={[0,.55,0]}><boxGeometry args={[.09,1.1,.045]}/><meshStandardMaterial color="#c7d4df" metalness={0.8} roughness={0.25}/></mesh><mesh position={[0,-.05,0]}><cylinderGeometry args={[.045,.045,.28,8]}/><meshStandardMaterial color="#60402b"/></mesh></group>;
  if(/key|chave|schluessel|schlüssel/.test(name)) return <group position={[x,1,z]}><mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[.16,.035,8,16]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh><mesh position={[.23,0,0]}><boxGeometry args={[.4,.06,.05]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
- if(/door|porta|tuer|tür/.test(name)) return <group position={[x,1.2,z]} rotation={[0,/open|opened|abr|abert|oeff|öffnet/i.test(action)?Math.sin(t*2)*.7:0,0]}><mesh castShadow><boxGeometry args={[1.1,2.4,.12]}/><meshStandardMaterial color="#69452e"/></mesh><mesh position={[.38,0,.09]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
+ if(/door|porta|tuer|tür/.test(name)) return <group position={[x,1.2,z]} rotation={[0,/open|opened|abr|abert|oeff|öffnet/i.test(action)?progress*1.15:/close|closed|fech|schließ/i.test(action)?(1-progress)*1.15:0,0]}><mesh castShadow><boxGeometry args={[1.1,2.4,.12]}/><meshStandardMaterial color="#69452e"/></mesh><mesh position={[.38,0,.09]}><sphereGeometry args={[.07,10,8]}/><meshStandardMaterial color="#d9b45b" metalness={0.8}/></mesh></group>;
  return <group position={[x,.55,z]}><mesh castShadow><boxGeometry args={[.85,1.05,.85]}/><meshStandardMaterial color="#806044" roughness={0.9}/></mesh><mesh position={[0,0,.44]}><boxGeometry args={[.9,.08,.035]}/><meshStandardMaterial color="#b58b5b"/></mesh></group>;
 };
 
@@ -115,23 +116,23 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const ground=isSnow?"#cbd5df":isDesert?"#a98a58":"#52634c";
  const sky=isNight?"#101b34":isSnow?"#aebdca":"#91a9bd";
  const t=frame/fps;
- const shotProgress=shot?interpolate(seconds,[shot.start,Math.max(shot.start+.001,shot.end)],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp"}):0;
+ const shotProgress=shot?interpolate(seconds,[shot.start,Math.max(shot.start+.001,shot.end)],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp"}):0;\n const shotFrame=shot?Math.max(0,frame-Math.round(shot.start*fps)):0;\n const shotDuration=shot?Math.max(.1,shot.end-shot.start):5;\n const localMotionTime=shotFrame/fps;\n const motion=inferMotion(action);\n const actorTravel=motion==="run"?Math.min(2.7*shotDuration,localMotionTime*2.7):motion==="walk"?Math.min(1.15*shotDuration,localMotionTime*1.15):0;
  const cameraX=interpolate(shotProgress,[0,1],[-.35,.35]);
  return <>
   <color attach="background" args={[sky]}/>
   <fog attach="fog" args={[sky,17,48]}/>
   <hemisphereLight args={["#c9e4ff","#514333",2.0]}/>
   <directionalLight position={[-5,9,6]} intensity={isNight?1.1:3.1} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024}/>
-  <directionalLight position={[5,4,-5]} color="#8cbcff" intensity={1.4}/>
+  <directionalLight position={[5,4,-5]} color="#8cbcff" intensity={1.4}/>\n  {isNight && <pointLight position={[0,3,2]} color="#ffb36b" intensity={1.2} distance={10}/>}
   <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.05,0]} receiveShadow><planeGeometry args={[100,100]}/><meshStandardMaterial color={ground} roughness={1}/></mesh>
   {isOcean && <mesh rotation={[-Math.PI/2,0,0]} position={[0,.015,-8]}><planeGeometry args={[100,45]}/><meshStandardMaterial color="#24647a" metalness={0.25} roughness={0.28}/></mesh>}
   {!isCity&&!isInterior&&!isOcean && Array.from({length:9},(_,i)=><mesh key={i} position={[-13+i*3.3,2.5+(i%3)*.8,-13-(i%2)*2]} rotation={[0,i*.5,0]} castShadow><coneGeometry args={[2.8,5+(i%3)*1.2,5]}/><meshStandardMaterial color={isSnow?"#687b8b":"#536d79"} roughness={1}/></mesh>)}
-  {!isCity&&!isInterior&&!isDesert&&!isOcean && Array.from({length:16},(_,i)=><Tree key={i} x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/>)}
+  {!isCity&&!isInterior&&!isDesert&&!isOcean && Array.from({length:16},(_,i)=><group key={i} rotation={[0,0,Math.sin(t*1.4+i)*.025]}><Tree x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/></group>)}
   {isCity && Array.from({length:10},(_,i)=><mesh key={i} position={[-11+i*2.5,1.7+(i%3)*.7,-8-(i%2)*3]} castShadow><boxGeometry args={[1.8,3.4+(i%3)*1.4,1.8]}/><meshStandardMaterial color={i%2?"#536171":"#777c82"} roughness={0.95}/></mesh>)}
   {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
   <group position={[cameraX*.3+actorX,0,0]}>
-    {modelFile ? <Suspense fallback={<Character frame={frame} fps={fps} action={action} expression={expression}/> }><GLBCharacter url={modelFile} frame={frame} fps={fps} action={action}/></Suspense> : <Character frame={frame} fps={fps} action={action} expression={expression}/>}
+    {modelFile ? <Suspense fallback={<Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/> }><GLBCharacter url={modelFile} frame={shotFrame} fps={fps} action={action} duration={shotDuration}/></Suspense> : <Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/>}
     {(shot?.objects||[]).map((label,index)=><SceneProp key={label+index} label={label} index={index} frame={frame} fps={fps} action={action}/>)}
   </group>
  </>;
