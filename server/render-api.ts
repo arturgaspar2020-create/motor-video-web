@@ -69,7 +69,8 @@ export function renderApi(): Plugin {
         if (req.method === "POST" && !id) {
           void (async () => {
             const workDir = await fs.mkdtemp(path.join(os.tmpdir(), "motor-video-studio-"));
-            let audioPath = "";\n            let modelPath = "";
+            let audioPath = "";
+            let modelPath = "";
             const fields: Record<string, string> = {};
             const writes: Promise<unknown>[] = [];
             try {
