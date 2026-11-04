@@ -1,4 +1,4 @@
-import React, {Suspense, useEffect, useMemo} from "react";
+import React, {Suspense, useEffect, useLayoutEffect, useMemo} from "react";
 import {useGLTF} from "@react-three/drei";
 import * as THREE from "three";
 import {clone as cloneSkeleton} from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -58,8 +58,8 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> 
  const mixer=useMemo(()=>new THREE.AnimationMixer(model),[model]);
  const selected=useMemo(()=>{
    const hint=action.toLowerCase();
-   return gltf.animations.find(clip=>hint.includes("run")&&/run/i.test(clip.name))
-     ||gltf.animations.find(clip=>hint.includes("walk")&&/walk/i.test(clip.name))
+   return gltf.animations.find(clip=>/run|renn|lauf/i.test(hint)&&/run|sprint/i.test(clip.name))
+     ||gltf.animations.find(clip=>/walk|geh|wander/i.test(hint)&&/walk/i.test(clip.name))
      ||gltf.animations.find(clip=>/idle|stand|breath/i.test(clip.name))
      ||gltf.animations[0];
  },[gltf.animations,action]);
@@ -68,7 +68,7 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> 
    if(selected){mixer.clipAction(selected).play();}
    return ()=>mixer.stopAllAction();
  },[mixer,selected]);
- useEffect(()=>{
+ useLayoutEffect(()=>{
    mixer.setTime(frame/fps);
    model.updateMatrixWorld(true);
  },[mixer,frame,fps,model]);
