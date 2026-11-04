@@ -96,6 +96,42 @@ await fs.mkdir(publicDir,{recursive:true});
 const audioExt=path.extname(audioPath)||".mp3";
 const audioFile="narration"+audioExt;
 await fs.copyFile(audioPath,path.join(publicDir,audioFile));
+let modelFile="";
+if(args.model){
+  const modelPath=path.resolve(args.model);
+  if(path.extname(modelPath).toLowerCase()!==".glb") throw new Error("O modelo de personagem deve estar no formato .glb.");
+  const modelDir=path.join(publicDir,"models");
+  await fs.mkdir(modelDir,{recursive:true});
+  modelFile="models/character.glb";
+  await fs.copyFile(modelPath,path.join(publicDir,modelFile));
+  console.log("Modelo GLB carregado: "+path.basename(modelPath));
+}
+if(args.align==="true"){
+  const alignmentPath=path.join(workDir,"audio-alignment.json");
+  console.log("Tentando alinhamento assistido por fala (faster-whisper)...");
+  const python=process.platform==="win32"?"python":"python3";
+  const aligned=await new Promise(resolve=>{
+    const child=spawn(python,[path.resolve("engine/align_audio.py"),"--audio",audioPath,"--project",projectPath,"--output",alignmentPath],{windowsHide:true});
+    let output="",error="";
+    child.stdout.on("data",chunk=>output+=chunk.toString());
+    child.stderr.on("data",chunk=>error+=chunk.toString());
+    child.on("error",err=>resolve({ok:false,log:err.message}));
+    child.on("close",code=>resolve({ok:code===0,log:output+error}));
+  });
+  console.log(aligned.log||"");
+  if(aligned.ok){
+    const timing=JSON.parse(await fs.readFile(alignmentPath,"utf8"));
+    if(timing.shots?.length===shots.length && timing.coverage>=0.45){
+      timing.shots.forEach((item,index)=>{
+        shots[index].start=Number(item.start.toFixed(4));
+        shots[index].end=Number(item.end.toFixed(4));
+        shots[index].duration=Number((item.end-item.start).toFixed(4));
+      });
+      cursor=Math.max(...shots.map(item=>item.end));
+      console.log("TIMING: timestamps de palavras reconhecidas; cobertura "+Math.round(timing.coverage*100)+"%. Revisar se o roteiro difere do áudio.");
+    } else console.log("AVISO: alinhamento insuficiente; mantendo estimativa proporcional.");
+  } else console.log("AVISO: alinhador indisponível; mantendo estimativa proporcional.");
+}
 const entryPoint=path.resolve("src/remotion/index.tsx");
 console.log("Preparando composição Remotion + Three.js...");
 const serveUrl=await bundle({entryPoint,publicDir,webpackOverride:config=>config,onProgress:progress=>console.log("BUNDLE "+Math.round(progress*100)+"%")});
