@@ -1,8 +1,8 @@
-import React from "react";
+import React, {Suspense, useEffect, useMemo, useRef} from "react";\nimport {useGLTF} from "@react-three/drei";\nimport * as THREE from "three";
 import {useCurrentFrame, useVideoConfig, interpolate} from "remotion";
 import type {Shot} from "./Video";
 
-type Props={shots:Shot[]};
+type Props={shots:Shot[];modelFile?:string};
 const Tree:React.FC<{x:number;z:number;scale?:number}> = ({x,z,scale=1}) => <group position={[x,0,z]} scale={scale}>
   <mesh position={[0,.9,0]} castShadow><cylinderGeometry args={[.12,.18,1.8,7]}/><meshStandardMaterial color="#60432d"/></mesh>
   <mesh position={[0,2.1,0]} castShadow><coneGeometry args={[.85,2.3,7]}/><meshStandardMaterial color="#28513e" roughness={1}/></mesh>
@@ -29,7 +29,29 @@ const Character:React.FC<{frame:number;fps:number;action:string}> = ({frame,fps,
  </group>;
 };
 
-export const CanvasWorld:React.FC<Props> = ({shots}) => {
+const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> = ({url,frame,fps,action}) => {
+ const gltf=useGLTF(url);
+ const mixer=useMemo(()=>new THREE.AnimationMixer(gltf.scene),[gltf.scene]);
+ const selected=useMemo(()=>{
+   const hint=action.toLowerCase();
+   return gltf.animations.find(clip=>hint.includes("run")&&/run/i.test(clip.name))
+     ||gltf.animations.find(clip=>hint.includes("walk")&&/walk/i.test(clip.name))
+     ||gltf.animations.find(clip=>/idle|stand|breath/i.test(clip.name))
+     ||gltf.animations[0];
+ },[gltf.animations,action]);
+ useEffect(()=>{
+   mixer.stopAllAction();
+   if(selected){mixer.clipAction(selected).play();}
+   return ()=>mixer.stopAllAction();
+ },[mixer,selected]);
+ useEffect(()=>{
+   mixer.setTime(frame/fps);
+   gltf.scene.updateMatrixWorld(true);
+ },[mixer,frame,fps,gltf.scene]);
+ return <primitive object={gltf.scene} position={[0,0,0]} />;
+};
+
+export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const frame=useCurrentFrame();
  const {fps}=useVideoConfig();
  const seconds=frame/fps;
@@ -54,7 +76,7 @@ export const CanvasWorld:React.FC<Props> = ({shots}) => {
   {Array.from({length:9},(_,i)=><mesh key={i} position={[-13+i*3.3,2.5+(i%3)*.8,-13-(i%2)*2]} rotation={[0,i*.5,0]} castShadow><coneGeometry args={[2.8,5+(i%3)*1.2,5]}/><meshStandardMaterial color={isSnow?"#687b8b":"#536d79"} roughness={1}/></mesh>)}
   {Array.from({length:16},(_,i)=><Tree key={i} x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/>)}
   <group position={[cameraX*.3,0,0]}>
-    <Character frame={frame} fps={fps} action={action}/>
+    {modelFile ? <Suspense fallback={<Character frame={frame} fps={fps} action={action}/> }><GLBCharacter url={modelFile} frame={frame} fps={fps} action={action}/></Suspense> : <Character frame={frame} fps={fps} action={action}/>}
     {/map|carta|papel|document/i.test((shot?.objects||[]).join(" ")+" "+action) && <group position={[1.15,1.6,.15]} rotation={[.2,0,-.1]}>
       <mesh castShadow><boxGeometry args={[.55,.035,.72]}/><meshStandardMaterial color="#e5d5a7"/></mesh>
       <mesh position={[0,.025,0]}><boxGeometry args={[.32,.01,.48]}/><meshStandardMaterial color="#947e54"/></mesh>
