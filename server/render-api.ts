@@ -78,7 +78,8 @@ export function renderApi(): Plugin {
               bb.on("field", (name, value) => { fields[name] = value; });
               bb.on("file", (name, stream, info) => {
                 if (name !== "audio" && name !== "model") { stream.resume(); return; }
-                const safeName = path.basename(info.filename || (name === "audio" ? "narration.mp3" : "character.glb"));
+                const incomingName = path.basename(info.filename || (name === "audio" ? "narration.mp3" : "character.glb"));
+                const safeName = name === "audio" ? "narration" + (path.extname(incomingName) || ".mp3") : "character.glb";
                 if (name === "audio") audioPath = path.join(workDir, safeName);
                 if (name === "model") modelPath = path.join(workDir, safeName);
                 writes.push(pipeline(stream, createWriteStream(path.join(workDir, safeName))));
