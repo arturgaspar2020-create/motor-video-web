@@ -66,7 +66,7 @@ const GLBCharacter:React.FC<{url:string;frame:number;fps:number;action:string}> 
  useLayoutEffect(()=>{
    mixer.stopAllAction();
    if(selected){mixer.clipAction(selected).play();}
-   return ()=>mixer.stopAllAction();
+   return ()=>{mixer.stopAllAction();};
  },[mixer,selected]);
  useLayoutEffect(()=>{
    mixer.setTime(frame/fps);
