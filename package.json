@@ -22,7 +22,8 @@
     "@remotion/renderer": "4.0.528",
     "@remotion/three": "4.0.528",
     "@react-three/fiber": "^9.0.0",
-    "@types/three": "^0.180.0"
+    "@types/three": "^0.180.0",
+    "@react-three/drei": "^10.0.0"
   },
   "devDependencies": {
     "@types/react": "latest",
