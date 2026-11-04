@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
-import * as THREE from "three";
+import * as THREE from "three";\nimport { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-type Props = { name: string; type: string; directives: string[]; ratio: "16:9" | "9:16" | "1:1" };
+type Props = { name: string; type: string; directives: string[]; ratio: "16:9" | "9:16" | "1:1"; modelUrl?: string };
 
 function valueOf(directives: string[], key: string) {
   const line = directives.find(item => new RegExp("^\\[" + key + "\\s*:", "i").test(item));
   return line ? line.slice(line.indexOf(":") + 1, -1).trim() : "";
 }
 
-export default function Scene3DPreview({ name, type, directives, ratio }: Props) {
+export default function Scene3DPreview({ name, type, directives, ratio, modelUrl }: Props) {
   const host = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -109,7 +109,7 @@ export default function Scene3DPreview({ name, type, directives, ratio }: Props)
     let frame = 0;
     const animate = () => {
       frame = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
+      const t = clock.getElapsedTime();\n      if (modelMixer) modelMixer.setTime(t);\n      if (modelRoot) actor.visible = false;
       const moving = /corr|camin|andar|run|walk|fug/i.test(actionText + " " + type);
       actor.position.y = moving ? Math.abs(Math.sin(t * 5)) * .09 : Math.sin(t * 1.4) * .025;
       actor.rotation.y = Math.sin(t * .45) * .12;
@@ -132,7 +132,7 @@ export default function Scene3DPreview({ name, type, directives, ratio }: Props)
     };
     const observer = new ResizeObserver(resize); observer.observe(root);
     return () => {
-      cancelAnimationFrame(frame); observer.disconnect();
+      disposed = true;\n      cancelAnimationFrame(frame); observer.disconnect();\n      if (modelRoot) { scene.remove(modelRoot); modelRoot.traverse(object => { const mesh=object as THREE.Mesh; if(mesh.geometry) mesh.geometry.dispose(); if(mesh.material){const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];mats.forEach(material=>material.dispose());} }); }\n      modelMixer?.stopAllAction();
       scene.traverse(object => {
         const mesh = object as THREE.Mesh;
         if (mesh.geometry) mesh.geometry.dispose();
@@ -144,7 +144,7 @@ export default function Scene3DPreview({ name, type, directives, ratio }: Props)
       renderer.dispose();
       if (renderer.domElement.parentElement === root) root.removeChild(renderer.domElement);
     };
-  }, [name, type, directives.join("|"), ratio]);
+  }, [name, type, directives.join("|"), ratio, modelUrl]);
 
   return <div className={"scene3d-frame " + (ratio === "9:16" ? "scene3d-vertical" : "")}>
     <div className="scene3d-canvas" ref={host} />
