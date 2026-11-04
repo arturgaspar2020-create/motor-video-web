@@ -164,7 +164,7 @@ export function renderApi(): Plugin {
             job.status = "canceled";
             job.message = "Solicitando interrupção...";
             job.child?.kill();
-            if (!job.child) await removeJobFiles(job);
+            if (!job.child) void removeJobFiles(job);
           }
           sendJson(200, publicJob(job));
           return;
