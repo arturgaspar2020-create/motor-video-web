@@ -70,7 +70,7 @@ scenes.forEach((scene,index)=>{
       id:"S"+String(index+1).padStart(3,"0")+"-P"+String(shotIndex+1).padStart(2,"0"),
       scene_id:index+1,scene_name:scene.name,scene_type:scene.type,narration:sentence,
       action:(d.acao||d.movimento||[]).at(-1)||"",
-      animation:(d.animacao||[]).at(-1)||"",
+      animation:(d.animacao||[]).at(-1)||"",\n      expression:(d.expressao||[]).at(-1)||"",
       environment:(d.ambiente||[]).at(-1)||"",
       lighting:(d.luz||[]).at(-1)||"",
       camera:(d.camera||d.animacao||[]).at(-1)||"",
