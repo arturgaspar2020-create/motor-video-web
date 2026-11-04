@@ -20,6 +20,7 @@ import tempfile
 from pathlib import Path
 
 from procedural import render_procedural_scene
+from director import build_director_plan
 
 SCENE_RE = re.compile(r"^\[cena:\s*([^\]|]+)(?:\|\s*([^\]]+))?\]$", re.I)
 MARKER_RE = re.compile(r"^\[([a-zA-ZÀ-ÿ_-]+)\s*:\s*(.*?)\]$")
@@ -158,6 +159,11 @@ def main() -> int:
                 print(" - " + warning)
 
         audio_duration = probe_duration(audio_path)
+        director_plan = build_director_plan(scenes, audio_duration)
+        plan_path = output_path.with_name(output_path.stem + "-director-plan.json")
+        plan_path.write_text(json.dumps(director_plan, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Plano de direção salvo: {plan_path}")
+        print(f"Planos: {director_plan['shot_count']} | sem ação explícita: {director_plan['shots_missing_explicit_action']}")
         explicit = []
         total_words = sum(len(WORD_RE.findall(s["narration"])) for s in scenes)
         for scene in scenes:
