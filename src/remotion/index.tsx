@@ -3,7 +3,7 @@ import {Composition, registerRoot} from "remotion";
 import {CinematicVideo, type CinematicVideoProps} from "./Video";
 
 const Root: React.FC = () => (
-  <Composition<CinematicVideoProps>
+  <Composition
     id="MotorVideo3D"
     component={CinematicVideo}
     durationInFrames={300}
