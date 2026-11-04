@@ -21,3 +21,15 @@
 .job-details>b{font:10px 'DM Mono';color:#9db9e8;letter-spacing:.8px}
 .job-details p{font-size:11px;color:#b7c4d8}
 @media(max-width:600px){.job-top{align-items:flex-start;flex-direction:column}.job-actions button{flex:1}}
+
+/* Beta 0.7 — live Three.js viewport */
+.scene3d-frame{height:390px;position:relative;overflow:hidden;border:1px solid #405778;border-radius:9px;background:#91a9bd;isolation:isolate}
+.scene3d-canvas,.scene3d-canvas canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene3d-overlay{position:absolute;z-index:2;top:12px;left:13px;display:grid;gap:5px;pointer-events:none;text-shadow:0 2px 8px #142333}
+.scene3d-overlay span,.scene3d-footer{font:9px 'DM Mono';letter-spacing:.8px;color:#fff;background:#101b2c99;padding:5px 7px;border-radius:4px;width:max-content}
+.scene3d-overlay b{font-size:15px;color:#fff}
+.scene3d-footer{position:absolute;z-index:2;bottom:11px;left:12px;pointer-events:none}
+.scene3d-error{display:none;position:absolute;inset:0;z-index:3;place-items:center;text-align:center;padding:25px;color:#fff;background:#18283beF;font-size:12px}
+.scene3d-frame[data-error] .scene3d-error{display:grid}
+.scene3d-vertical{height:520px;width:min(100%,360px);margin:auto}
+@media(max-width:800px){.scene3d-frame{height:330px}.scene3d-vertical{height:480px}}
