@@ -2,7 +2,7 @@
 
 Editor e motor local de produção audiovisual, com objetivo de automatizar vídeos híbridos 2D/3D a partir de roteiro e narração.
 
-## Estado atual — Beta 0.6 (direção cinematográfica em preparação)
+## Estado atual — Beta 0.7 (prévia 3D em tempo real)
 
 ### Interface web
 - Editor de roteiro e parser inicial de cenas.
@@ -27,6 +27,16 @@ Editor e motor local de produção audiovisual, com objetivo de automatizar víd
 - Consulte [engine/CINEMATIC_3D_SPEC.md](engine/CINEMATIC_3D_SPEC.md) para a arquitetura do futuro renderizador 3D cinematográfico.
 
 **Importante:** esta etapa ainda não renderiza personagens 3D nem executa as ações do plano. O MP4 atual continua usando o renderizador anterior. Os tempos também são estimativas, não alinhamento palavra por palavra.
+
+
+## Beta 0.7 — viewport 3D Three.js
+
+- Adiciona Three.js ao aplicativo e uma prévia WebGL em tempo real na interface.
+- A prévia constrói uma cena procedural com terreno, montanhas, árvores, iluminação, sombras, câmera, personagem blocado 3D, mochila e objeto de mapa quando indicado no roteiro.
+- A animação básica reage a instruções de caminhada/corrida e mantém movimento contínuo por frame.
+- O viewport limita o pixel ratio para equilibrar qualidade e desempenho em GPUs como a GTX 1060 6 GB.
+
+**Limite desta etapa:** esta é uma cena 3D procedural de protótipo, não personagens realistas com malha/rig profissional. O MP4 continua sendo renderizado pelo pipeline FFmpeg 2D anterior; ainda não exporta esta cena Three.js para vídeo. A prévia também ainda não interpreta todas as diretivas do roteiro.
 
 ## Instalação da interface
 Requer Node.js LTS:
