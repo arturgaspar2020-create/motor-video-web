@@ -33,6 +33,67 @@ function parseScenes(script: string): SceneInput[] {
   return scenes;
 }
 
+function directiveValue(scene: SceneInput, keys: string[]): string {
+  for (const key of keys) {
+    const normalized = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const line = [...scene.directives].reverse().find(item => {
+      const match = item.match(/^\[([^:]+):\s*([^\]]*)\]$/);
+      return match?.[1].trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === normalized.toLowerCase();
+    });
+    if (line) return line.slice(line.indexOf(":") + 1, -1).trim();
+  }
+  return "";
+}
+
+function directiveList(value: string): string[] {
+  return value.split(/[,;\n]+|\s+e\s+/i).map(item => item.trim()).filter(Boolean).slice(0, 12);
+}
+
+function inferAction(text: string): string {
+  const rules: Array<[string, RegExp]> = [
+    ["running", /\b(run|runs|running|ran|sprint|corr(?:e|eu|endo|er)|fug(?:e|iu|indo|ir)|rennt|rennen)\b/i],
+    ["walking", /\b(walk|walks|walking|walked|caminh(?:a|ou|ando|ar)|and(?:a|ou|ando)|geht|ging)\b/i],
+    ["opening", /\b(open|opens|opened|opening|abr(?:e|iu|indo|ir)|öffnet|oeffnet)\b/i],
+    ["closing", /\b(close|closes|closed|closing|fech(?:a|ou|ando|ar)|schließt)\b/i],
+    ["picking up", /\b(pick(?:s)? up|picked up|grab(?:s|bed)?|take(?:s)?|took|peg(?:a|ou|ando)|apanh(?:a|ou|ando))\b/i],
+    ["dropping", /\b(drop(?:s|ped)?|falls?|fell|falling|derrub(?:a|ou|ando)|cai(?:u|ndo))\b/i],
+    ["sitting", /\b(sit(?:s|ting)?|sat|senta(?:-se|r)?|sentou|sentado)\b/i],
+    ["standing", /\b(stand(?:s|ing)?|stood|levanta(?:-se|r)?|levantou)\b/i],
+    ["jumping", /\b(jump(?:s|ed|ing)?|salta(?:r|ou|ndo)?|pula(?:r|ou|ndo)?)\b/i],
+    ["turning", /\b(turn(?:s|ed|ing)?|vira(?:-se|r)?|virou|gira(?:r|ou)?)\b/i],
+    ["pointing", /\b(press(?:es|ed|ing)?|push(?:es|ed|ing)?|aperta(?:r|ou|ndo)?|pressiona(?:r|ou|ndo)?|point(?:s|ed|ing)?|apont(?:a|ou|ando))\b/i],
+    ["looking", /\b(look(?:s|ed|ing)?|watch(?:es|ed)?|observ(?:a|ou|ando)|olha(?:r|ou|ndo)?|encara)\b/i],
+    ["reacting", /\b(flicker(?:s|ed|ing)?|blink(?:s|ed|ing)?|pisca(?:r|ou|ndo)?|solavanco|para bruscamente|stops?|stopped|reag(?:e|iu|indo)|assust(?:a|ou|ado))\b/i],
+    ["waving", /\b(wav(?:e|es|ed|ing)|acen(?:a|ou|ando))\b/i]
+  ];
+  for (const [action, pattern] of rules) if (pattern.test(text)) return action;
+  return "none";
+}
+
+function normalizeAction(value: unknown, narration: string, sceneAction: string): string {
+  const directiveAction = inferAction(sceneAction);
+  if (directiveAction !== "none") return directiveAction;
+  const raw = String(value || "").toLowerCase().trim();
+  const allowed = new Set(["idle","walking","running","opening","closing","picking up","dropping","sitting","standing","jumping","turning","looking","reacting","pointing","waving","fighting","climbing","swimming","hiding","driving","riding","talking","searching","crawling","kneeling","pushing","pulling","carrying","aiming","shooting","none"]);
+  if (allowed.has(raw) && raw !== "none") return raw;
+  return inferAction(narration);
+}
+
+function normalizeCamera(value: unknown): string {
+  const raw = String(value || "").trim();
+  if (!raw) return "medium shot";
+  const lower = raw.toLowerCase();
+  if (/plano\s+aberto|plano\s+geral|wide shot|establishing/.test(lower)) return "wide shot";
+  if (/plano\s+m[eé]dio|medium shot/.test(lower)) return "medium shot";
+  if (/close.?up|primeiro plano|detalhe/.test(lower)) return "close-up";
+  if (/sobre o ombro|over.?the.?shoulder/.test(lower)) return "over-the-shoulder";
+  if (/ponto de vista|point.?of.?view|subjetiva/.test(lower)) return "point-of-view";
+  if (/c[aâ]mera tremendo|handheld|tremida/.test(lower)) return "handheld tracking shot";
+  if (/de baixo|low angle/.test(lower)) return "low angle";
+  if (/a[eé]rea|de cima|aerial|overhead/.test(lower)) return "aerial shot";
+  return raw.slice(0, 120);
+}
+
 function applyShotMarkers(script: string, scenes: SceneInput[], plans: ShotPlan[][]): string {
   const lines = script.replace(/\r/g, "").split("\n");
   const output: string[] = [];
@@ -139,9 +200,12 @@ export function localAiApi(): Plugin {
             const system = [
               "Você é o diretor de animação 3D do Motor Video Studio.",
               "Analise as cenas e cada frase de narração. Responda SOMENTE JSON válido, sem markdown.",
+              "As diretivas existentes em existing_directives são instruções do usuário e têm prioridade sobre inferências genéricas. Leia [acao:], [elementos:], [ambiente:], [personagem:], [camera:] e [animacao:] e aplique seus valores aos shots correspondentes.",
+              "Se uma diretiva definir a ação da cena, use-a para escolher uma ação visual compatível em cada frase; não retorne action=none quando a diretiva ou a narração indicar uma ação.",
+              "Inclua os objetos de [elementos:] em objects em todos os shots da cena. Use [ambiente:] em environment, [personagem:] em character e [camera:] em camera. Não descarte esses marcadores.",
               "Retorne exatamente um item por cena e exatamente um shot por frase, na mesma ordem.",
               "Não reescreva, resuma ou traduza a narração. Não invente acontecimentos que não estejam implicados no texto.",
-              "Para action use apenas: idle, walking, running, opening, closing, picking up, dropping, sitting, standing, jumping, turning, looking, reacting, pointing, waving, fighting, climbing, swimming, hiding, driving, riding, talking, searching, crawling, kneeling, pushing, pulling, carrying, aiming, shooting, none.",
+              "Para action use apenas: idle, walking, running, opening, closing, picking up, dropping, sitting, standing, jumping, turning, looking, reacting, pointing, waving, fighting, climbing, swimming, hiding, driving, riding, talking, searching, crawling, kneeling, pushing, pulling, carrying, aiming, shooting, none. Para apertar ou pressionar um botão, use pointing; para luzes piscando, pane ou susto, use reacting.",
               "Escolha a ação principal visível da frase. Use none se não houver ação humana clara.",
               "camera deve ser uma instrução curta em inglês: wide shot, medium shot, close-up, tracking shot, over-the-shoulder, low angle, aerial shot, point-of-view, reaction close-up ou uma combinação simples.",
               "objects deve conter apenas objetos concretos mencionados ou claramente necessários na frase, com nomes simples em inglês.",
@@ -178,14 +242,25 @@ export function localAiApi(): Plugin {
               if (!Array.isArray(returned.shots) || returned.shots.length !== scene.sentences.length) {
                 throw new Error("A IA não retornou uma análise para cada frase da cena " + scene.id + ". Tente novamente.");
               }
-              return returned.shots.map(item => ({
-                action: String(item.action || "none").slice(0, 40),
-                camera: String(item.camera || "medium shot").slice(0, 120),
-                objects: Array.isArray(item.objects) ? item.objects.map(value => String(value).slice(0, 60)).slice(0, 12) : [],
-                environment: String(item.environment || "").slice(0, 120),
-                character: String(item.character || "").slice(0, 100),
-                emotion: String(item.emotion || "").slice(0, 60)
-              }));
+              const sceneAction = directiveValue(scene, ["acao", "movimento"]);
+              const sceneElements = directiveList(directiveValue(scene, ["elementos", "objetos"]));
+              const sceneEnvironment = directiveValue(scene, ["ambiente", "local"]);
+              const sceneCharacter = directiveValue(scene, ["personagem", "personagens"]);
+              const sceneCamera = directiveValue(scene, ["camera", "câmera", "enquadramento"]);
+              const sceneAnimation = directiveValue(scene, ["animacao", "animação"]);
+              return returned.shots.map((item, shotIndex) => {
+                const narration = scene.sentences[shotIndex];
+                const action = normalizeAction(item.action, narration, sceneAction || sceneAnimation);
+                const aiObjects = Array.isArray(item.objects) ? item.objects.map(value => String(value).trim()).filter(Boolean) : [];
+                return {
+                  action: action.slice(0, 40),
+                  camera: normalizeCamera(item.camera || sceneCamera),
+                  objects: [...new Set([...sceneElements, ...aiObjects])].slice(0, 12).map(value => value.slice(0, 60)),
+                  environment: String(item.environment || sceneEnvironment || "").slice(0, 120),
+                  character: String(item.character || sceneCharacter || "").slice(0, 100),
+                  emotion: String(item.emotion || (/(medo|assust|pânico|panic|surpres|surprise)/i.test(sceneAnimation) ? "fear" : "")).slice(0, 60)
+                };
+              });
             });
             const enhancedScript = applyShotMarkers(script, scenes, plans);
             const actionCount = plans.flat().filter(item => item.action !== "none" && item.action !== "idle").length;
