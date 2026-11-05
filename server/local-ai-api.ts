@@ -35,10 +35,10 @@ function parseScenes(script: string): SceneInput[] {
 
 function directiveValue(scene: SceneInput, keys: string[]): string {
   for (const key of keys) {
-    const normalized = key.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+    const normalized = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const line = [...scene.directives].reverse().find(item => {
-      const match = item.match(/^\\[([^:]+):\\s*([^\\]]*)\\]$/);
-      return match?.[1].trim().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase() === normalized.toLowerCase();
+      const match = item.match(/^\[([^:]+):\s*([^\]]*)\]$/);
+      return match?.[1].trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === normalized.toLowerCase();
     });
     if (line) return line.slice(line.indexOf(":") + 1, -1).trim();
   }
@@ -46,25 +46,25 @@ function directiveValue(scene: SceneInput, keys: string[]): string {
 }
 
 function directiveList(value: string): string[] {
-  return value.split(/[,;\\n]+|\\s+e\\s+/i).map(item => item.trim()).filter(Boolean).slice(0, 12);
+  return value.split(/[,;\n]+|\s+e\s+/i).map(item => item.trim()).filter(Boolean).slice(0, 12);
 }
 
 function inferAction(text: string): string {
   const rules: Array<[string, RegExp]> = [
-    ["running", /\\b(run|runs|running|ran|sprint|corr(?:e|eu|endo|er)|fug(?:e|iu|indo|ir)|rennt|rennen)\\b/i],
-    ["walking", /\\b(walk|walks|walking|walked|caminh(?:a|ou|ando|ar)|and(?:a|ou|ando)|geht|ging)\\b/i],
-    ["opening", /\\b(open|opens|opened|opening|abr(?:e|iu|indo|ir)|öffnet|oeffnet)\\b/i],
-    ["closing", /\\b(close|closes|closed|closing|fech(?:a|ou|ando|ar)|schließt)\\b/i],
-    ["picking up", /\\b(pick(?:s)? up|picked up|grab(?:s|bed)?|take(?:s)?|took|peg(?:a|ou|ando)|apanh(?:a|ou|ando))\\b/i],
-    ["dropping", /\\b(drop(?:s|ped)?|falls?|fell|falling|derrub(?:a|ou|ando)|cai(?:u|ndo))\\b/i],
-    ["sitting", /\\b(sit(?:s|ting)?|sat|senta(?:-se|r)?|sentou|sentado)\\b/i],
-    ["standing", /\\b(stand(?:s|ing)?|stood|levanta(?:-se|r)?|levantou)\\b/i],
-    ["jumping", /\\b(jump(?:s|ed|ing)?|salta(?:r|ou|ndo)?|pula(?:r|ou|ndo)?)\\b/i],
-    ["turning", /\\b(turn(?:s|ed|ing)?|vira(?:-se|r)?|virou|gira(?:r|ou)?)\\b/i],
-    ["pointing", /\\b(press(?:es|ed|ing)?|push(?:es|ed|ing)?|aperta(?:r|ou|ndo)?|pressiona(?:r|ou|ndo)?|point(?:s|ed|ing)?|apont(?:a|ou|ando))\\b/i],
-    ["looking", /\\b(look(?:s|ed|ing)?|watch(?:es|ed)?|observ(?:a|ou|ando)|olha(?:r|ou|ndo)?|encara)\\b/i],
-    ["reacting", /\\b(flicker(?:s|ed|ing)?|blink(?:s|ed|ing)?|pisca(?:r|ou|ndo)?|solavanco|para bruscamente|stops?|stopped|reag(?:e|iu|indo)|assust(?:a|ou|ado))\\b/i],
-    ["waving", /\\b(wav(?:e|es|ed|ing)|acen(?:a|ou|ando))\\b/i]
+    ["running", /\b(run|runs|running|ran|sprint|corr(?:e|eu|endo|er)|fug(?:e|iu|indo|ir)|rennt|rennen)\b/i],
+    ["walking", /\b(walk|walks|walking|walked|caminh(?:a|ou|ando|ar)|and(?:a|ou|ando)|geht|ging)\b/i],
+    ["opening", /\b(open|opens|opened|opening|abr(?:e|iu|indo|ir)|öffnet|oeffnet)\b/i],
+    ["closing", /\b(close|closes|closed|closing|fech(?:a|ou|ando|ar)|schließt)\b/i],
+    ["picking up", /\b(pick(?:s)? up|picked up|grab(?:s|bed)?|take(?:s)?|took|peg(?:a|ou|ando)|apanh(?:a|ou|ando))\b/i],
+    ["dropping", /\b(drop(?:s|ped)?|falls?|fell|falling|derrub(?:a|ou|ando)|cai(?:u|ndo))\b/i],
+    ["sitting", /\b(sit(?:s|ting)?|sat|senta(?:-se|r)?|sentou|sentado)\b/i],
+    ["standing", /\b(stand(?:s|ing)?|stood|levanta(?:-se|r)?|levantou)\b/i],
+    ["jumping", /\b(jump(?:s|ed|ing)?|salta(?:r|ou|ndo)?|pula(?:r|ou|ndo)?)\b/i],
+    ["turning", /\b(turn(?:s|ed|ing)?|vira(?:-se|r)?|virou|gira(?:r|ou)?)\b/i],
+    ["pointing", /\b(press(?:es|ed|ing)?|push(?:es|ed|ing)?|aperta(?:r|ou|ndo)?|pressiona(?:r|ou|ndo)?|point(?:s|ed|ing)?|apont(?:a|ou|ando))\b/i],
+    ["looking", /\b(look(?:s|ed|ing)?|watch(?:es|ed)?|observ(?:a|ou|ando)|olha(?:r|ou|ndo)?|encara)\b/i],
+    ["reacting", /\b(flicker(?:s|ed|ing)?|blink(?:s|ed|ing)?|pisca(?:r|ou|ndo)?|solavanco|para bruscamente|stops?|stopped|reag(?:e|iu|indo)|assust(?:a|ou|ado))\b/i],
+    ["waving", /\b(wav(?:e|es|ed|ing)|acen(?:a|ou|ando))\b/i]
   ];
   for (const [action, pattern] of rules) if (pattern.test(text)) return action;
   return "none";
@@ -74,7 +74,8 @@ function normalizeAction(value: unknown, narration: string, sceneAction: string)
   const raw = String(value || "").toLowerCase().trim();
   const allowed = new Set(["idle","walking","running","opening","closing","picking up","dropping","sitting","standing","jumping","turning","looking","reacting","pointing","waving","fighting","climbing","swimming","hiding","driving","riding","talking","searching","crawling","kneeling","pushing","pulling","carrying","aiming","shooting","none"]);
   if (allowed.has(raw) && raw !== "none") return raw;
-  return inferAction(narration) !== "none" ? inferAction(narration) : inferAction(sceneAction);
+  const narrationAction = inferAction(narration);
+  return narrationAction !== "none" ? narrationAction : inferAction(sceneAction);
 }
 
 function applyShotMarkers(script: string, scenes: SceneInput[], plans: ShotPlan[][]): string {
