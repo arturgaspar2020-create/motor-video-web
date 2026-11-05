@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { parseScript, countWords } from "./parser";
 import Scene3DPreview from "./Scene3DPreview";
 
-const initial = "@idioma de\n@titulo Die vergessene Expedition\n\n[cena: ambiente | Nebeliger Wald]\n[ambiente: dichter Wald bei Sonnenaufgang]\n[elementos: alte Karte, Rucksack, Taschenlampe]\n[animacao: langsame Kamerafahrt nach vorne]\nNiemand wusste, was sich hinter den Bergen verbarg. Doch an diesem Morgen sollte sich alles verändern.\n\n[cena: personagem | Der Entdecker]\n[posicoes: Figur in der Bildmitte]\n[animacao: Figur hebt die Karte und schaut nach links]\nEr hatte nur eine Karte und drei Tage Zeit, um die Wahrheit zu finden.";
+const initial = "Ninguém sabia o que existia além das montanhas. Naquela manhã, um explorador encontrou um mapa antigo escondido entre as árvores.\n\nEle percebeu que alguém havia marcado um caminho até uma região desconhecida. Sem imaginar o perigo que o esperava, começou a seguir as pistas.";
 
 type Ratio = "16:9" | "9:16" | "1:1";
 type Job = {
