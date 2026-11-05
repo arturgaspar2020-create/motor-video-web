@@ -123,7 +123,8 @@ export default function App() {
   }
   async function render() {
     if (!audio) { setStatus("Envie a narração antes de renderizar"); return; }
-    if (!project.scenes.length) { setStatus("Adicione uma narração ao roteiro"); return; }\n    if (!/\\[shot:\\s*\\{/i.test(script)) { setStatus("Analise o roteiro com a IA antes de gerar o MP4"); window.alert("Primeiro clique em ANALISAR ROTEIRO COM IA. O motor vai criar as cenas e os planos automaticamente."); return; }
+    if (!project.scenes.length) { setStatus("Adicione uma narração ao roteiro"); return; }
+    if (!script.includes("[shot: {")) { setStatus("Analise o roteiro com a IA antes de gerar o MP4"); window.alert("Primeiro clique em CRIAR CENAS AUTOMATICAMENTE. A IA vai montar as cenas e os planos."); return; }
     setRendering(true); setStatus("Preparando renderização...");
     const [width, height] = dimensions[ratio];
     const data = new FormData();
