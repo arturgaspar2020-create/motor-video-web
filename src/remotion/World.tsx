@@ -20,6 +20,7 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
  const jumping=/jump|salta|pula|spring|springen|springt|huepft|hüpft/i.test(action);
  const waving=/wave|acen|winken|saluda|winkt/i.test(action);
  const pointing=/point|aponta|zeigt|indica/i.test(action);
+ const pressing=motion==="press";
  const crouching=/crouch|agacha|ajoelha|kneel|kniet|duckt/i.test(action);
  const sitting=motion==="sit";
  const reacting=motion==="react";
@@ -31,8 +32,8 @@ const Character:React.FC<{frame:number;fps:number;action:string;expression?:stri
  const mouthScale: [number,number,number]=surprised?[.12,.14,.035]:happy?[.15,.065,.035]:sad?[.13,.035,.035]:[.12,.025,.03];
  const swing=walking?Math.sin(t*(running?8:5.8))*(running?.72:.52):Math.sin(t*1.2)*.025;
  const bounce=jumping?Math.abs(Math.sin(t*3.1))*.55:walking?Math.abs(Math.sin(t*(running?8:5.8)))*(running?.13:.07):0;
- const armLeft: [number,number,number]=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:reacting?[0,0,-.65]:[swing,0,0];
- const armRight: [number,number,number]=pointing?[0,0,.8]:reacting?[0,0,.65]:[walking?-swing:0,0,0];
+ const armLeft: [number,number,number]=waving?[0,0,-.85-Math.sin(t*7)*.45]:pointing?[0,0,-1.0]:pressing?[0,0,-.42]:reacting?[0,0,-.65]:[swing,0,0];
+ const armRight: [number,number,number]=pointing?[0,0,.8]:pressing?[0,0,.12]:reacting?[0,0,.65]:[walking?-swing:0,0,0];
  return <group position={[0,bounce-(crouching ? 0.45 : sitting ? .58 : 0),0]} rotation={[0,(motion==="turn"?progress*Math.PI*.75:Math.sin(t*.35)*.1),reacting?Math.sin(t*15)*.045:0]}>
    <mesh position={[0,1.45,0]} castShadow><capsuleGeometry args={[.43,.85,5,12]}/><meshStandardMaterial color="#b96b43" roughness={.76}/></mesh>
    <mesh position={[0,1.98,0]} castShadow><cylinderGeometry args={[.16,.17,.28,12]}/><meshStandardMaterial color="#d8a47e" roughness={.85}/></mesh>
@@ -116,6 +117,7 @@ const SceneProp:React.FC<{label:string;index:number;frame:number;fps:number;acti
  const heldBlend=picking?progress:dropping?1-progress:0;
  const itemX=x+(.48-x)*heldBlend, itemY=.12+1.3*heldBlend, itemZ=z+(.15-z)*heldBlend;
  if(/^(road|path|trilha|estrada|caminho|trail)$/.test(name)) return null;
+ if(/painel de botoes|button panel|elevator panel|painel elevador/.test(name)) return <group position={[x,1.65,z]}><mesh castShadow><boxGeometry args={[.34,1.05,.12]}/><meshStandardMaterial color="#303943" metalness={.55} roughness={.35}/></mesh>{Array.from({length:6},(_,i)=><mesh key={i} position={[0,.38-i*.15,.075]}><cylinderGeometry args={[.045,.045,.025,16]}/><meshStandardMaterial color={i===2?"#69c9ff":"#d4d9df"} emissive={i===2?"#238bd1":"#000000"} emissiveIntensity={i===2?1.4:0}/></mesh>)}</group>;
  if(/backpack|mochila|rucksack/.test(name)) return <group position={[x,.55,z]} rotation={[0,Math.sin(t*.8)*.025,0]}><mesh castShadow position={[0,.12,0]}><boxGeometry args={[.58,.78,.32]}/><meshStandardMaterial color="#76513a" roughness={.95}/></mesh><mesh position={[0,.48,-.02]}><boxGeometry args={[.42,.22,.3]}/><meshStandardMaterial color="#9a704b"/></mesh><mesh position={[-.23,.1,.18]} rotation={[0,0,-.12]}><boxGeometry args={[.08,.62,.08]}/><meshStandardMaterial color="#49382c"/></mesh><mesh position={[.23,.1,.18]} rotation={[0,0,.12]}><boxGeometry args={[.08,.62,.08]}/><meshStandardMaterial color="#49382c"/></mesh></group>;
  if(/rock|stone|pedra|rocha/.test(name)) return <mesh position={[x,.28,z]} rotation={[.2,.5,.1]} castShadow><icosahedronGeometry args={[.42,1]}/><meshStandardMaterial color="#77766f" roughness={1}/></mesh>;
  if(/tree|arvore|arvores|baum/.test(name)) return <Tree x={x} z={z} scale={1.15}/>;
