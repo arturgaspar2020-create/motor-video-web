@@ -1,4 +1,4 @@
-export type MotionKind = "walk" | "run" | "open" | "close" | "pickup" | "drop" | "sit" | "stand" | "turn" | "look" | "react" | "jump" | "point" | "wave" | "idle";
+export type MotionKind = "walk" | "run" | "open" | "close" | "pickup" | "drop" | "sit" | "stand" | "turn" | "look" | "react" | "jump" | "point" | "press" | "wave" | "idle";
 
 const rules: Array<[MotionKind, RegExp]> = [
   ["run", /\b(run|runs|running|ran|sprint|sprinted|corr(?:e|eu|endo|er)|fug(?:e|iu|indo|ir)|rennt|rennen|läuft|lief|sprintet)\b/i],
@@ -13,6 +13,7 @@ const rules: Array<[MotionKind, RegExp]> = [
   ["turn", /\b(turn(?:s|ed|ing)?|vira(?:-se|r)?|virou|gira(?:r|ou)?|dreht sich|drehte sich)\b/i],
   ["look", /\b(look(?:s|ed|ing)?|watch(?:es|ed)?|observ(?:a|ou|ando)|olha(?:r|ou|ndo)?|encara|blickt|sieht)\b/i],
   ["react", /\b(hear(?:s|d|ing)?|heard|sound|noise|barulho|ru[ií]do|assust(?:a|ou|ado)|surpris(?:e|ed)|startl(?:e|ed)|react(?:s|ed|ing)?|reag(?:e|iu|indo)|erschrickt)\b/i],
+  ["press", /\b(press(?:es|ed|ing)?|push(?:es|ed|ing)?|aperta(?:r|ou|ndo)?|pressiona(?:r|ou|ndo)?)\b/i],
   ["point", /\b(point(?:s|ed|ing)?|apont(?:a|ou|ando)|zeigt|deutet)\b/i],
   ["wave", /\b(wav(?:e|es|ed|ing)|acen(?:a|ou|ando)|winkt)\b/i],
 ];
