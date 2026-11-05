@@ -61,7 +61,8 @@ function inferAction(text: string): string {
     ["standing", /\b(stand(?:s|ing)?|stood|levanta(?:-se|r)?|levantou)\b/i],
     ["jumping", /\b(jump(?:s|ed|ing)?|salta(?:r|ou|ndo)?|pula(?:r|ou|ndo)?)\b/i],
     ["turning", /\b(turn(?:s|ed|ing)?|vira(?:-se|r)?|virou|gira(?:r|ou)?)\b/i],
-    ["pointing", /\b(press(?:es|ed|ing)?|push(?:es|ed|ing)?|aperta(?:r|ou|ndo)?|pressiona(?:r|ou|ndo)?|point(?:s|ed|ing)?|apont(?:a|ou|ando))\b/i],
+    ["pressing", /\b(press(?:es|ed|ing)?|push(?:es|ed|ing)?|aperta(?:r|ou|ndo)?|pressiona(?:r|ou|ndo)?)\b/i],
+    ["pointing", /\b(point(?:s|ed|ing)?|apont(?:a|ou|ando))\b/i],
     ["looking", /\b(look(?:s|ed|ing)?|watch(?:es|ed)?|observ(?:a|ou|ando)|olha(?:r|ou|ndo)?|encara)\b/i],
     ["reacting", /\b(flicker(?:s|ed|ing)?|blink(?:s|ed|ing)?|pisca(?:r|ou|ndo)?|solavanco|para bruscamente|stops?|stopped|reag(?:e|iu|indo)|assust(?:a|ou|ado))\b/i],
     ["waving", /\b(wav(?:e|es|ed|ing)|acen(?:a|ou|ando))\b/i]
@@ -74,7 +75,7 @@ function normalizeAction(value: unknown, narration: string, sceneAction: string)
   const directiveAction = inferAction(sceneAction);
   if (directiveAction !== "none") return directiveAction;
   const raw = String(value || "").toLowerCase().trim();
-  const allowed = new Set(["idle","walking","running","opening","closing","picking up","dropping","sitting","standing","jumping","turning","looking","reacting","pointing","waving","fighting","climbing","swimming","hiding","driving","riding","talking","searching","crawling","kneeling","pushing","pulling","carrying","aiming","shooting","none"]);
+  const allowed = new Set(["idle","walking","running","opening","closing","picking up","dropping","sitting","standing","jumping","turning","looking","reacting","pointing","pressing","waving","fighting","climbing","swimming","hiding","driving","riding","talking","searching","crawling","kneeling","pushing","pulling","carrying","aiming","shooting","none"]);
   if (allowed.has(raw) && raw !== "none") return raw;
   return inferAction(narration);
 }
@@ -205,7 +206,7 @@ export function localAiApi(): Plugin {
               "Inclua os objetos de [elementos:] em objects em todos os shots da cena. Use [ambiente:] em environment, [personagem:] em character e [camera:] em camera. Não descarte esses marcadores.",
               "Retorne exatamente um item por cena e exatamente um shot por frase, na mesma ordem.",
               "Não reescreva, resuma ou traduza a narração. Não invente acontecimentos que não estejam implicados no texto.",
-              "Para action use apenas: idle, walking, running, opening, closing, picking up, dropping, sitting, standing, jumping, turning, looking, reacting, pointing, waving, fighting, climbing, swimming, hiding, driving, riding, talking, searching, crawling, kneeling, pushing, pulling, carrying, aiming, shooting, none. Para apertar ou pressionar um botão, use pointing; para luzes piscando, pane ou susto, use reacting.",
+              "Para action use apenas: idle, walking, running, opening, closing, picking up, dropping, sitting, standing, jumping, turning, looking, reacting, pointing, waving, fighting, climbing, swimming, hiding, driving, riding, talking, searching, crawling, kneeling, pushing, pulling, carrying, aiming, shooting, none. Para apertar ou pressionar fisicamente um botão, use pressing; use pointing somente para apontar. Para luzes piscando, pane ou susto, use reacting.",
               "Escolha a ação principal visível da frase. Use none se não houver ação humana clara.",
               "camera deve ser uma instrução curta em inglês: wide shot, medium shot, close-up, tracking shot, over-the-shoulder, low angle, aerial shot, point-of-view, reaction close-up ou uma combinação simples.",
               "objects deve conter apenas objetos concretos mencionados ou claramente necessários na frase, com nomes simples em inglês.",
@@ -252,11 +253,12 @@ export function localAiApi(): Plugin {
                 const narration = scene.sentences[shotIndex];
                 const action = normalizeAction(item.action, narration, sceneAction || sceneAnimation);
                 const aiObjects = Array.isArray(item.objects) ? item.objects.map(value => String(value).trim()).filter(Boolean) : [];
+                const sceneIsElevator = /elevator|elevador|lift|aufzug/i.test(scene.name);
                 return {
                   action: action.slice(0, 40),
                   camera: normalizeCamera(item.camera || sceneCamera),
-                  objects: [...new Set([...sceneElements, ...aiObjects])].slice(0, 12).map(value => value.slice(0, 60)),
-                  environment: String(item.environment || sceneEnvironment || "").slice(0, 120),
+                  objects: (sceneElements.length ? sceneElements : aiObjects).slice(0, 12).map(value => value.slice(0, 60)),
+                  environment: String(sceneEnvironment || item.environment || (sceneIsElevator ? "interior of a modern elevator" : "")).slice(0, 120),
                   character: String(item.character || sceneCharacter || "").slice(0, 100),
                   emotion: String(item.emotion || (/(medo|assust|pânico|panic|surpres|surprise)/i.test(sceneAnimation) ? "fear" : "")).slice(0, 60)
                 };
