@@ -123,7 +123,7 @@ export default function App() {
   }
   async function render() {
     if (!audio) { setStatus("Envie a narração antes de renderizar"); return; }
-    if (!project.scenes.length) { setStatus("Adicione pelo menos uma cena ao roteiro"); return; }
+    if (!project.scenes.length) { setStatus("Adicione uma narração ao roteiro"); return; }\n    if (!/\\[shot:\\s*\\{/i.test(script)) { setStatus("Analise o roteiro com a IA antes de gerar o MP4"); window.alert("Primeiro clique em ANALISAR ROTEIRO COM IA. O motor vai criar as cenas e os planos automaticamente."); return; }
     setRendering(true); setStatus("Preparando renderização...");
     const [width, height] = dimensions[ratio];
     const data = new FormData();
@@ -203,24 +203,24 @@ export default function App() {
         <section className="panel"><h2>✎ ROTEIRO</h2>
           <div className="ai-box">
             <div className="ai-top"><div><b>✦ DIRETOR DE IA LOCAL</b><small>{aiStatus}</small></div><button onClick={checkAi} disabled={aiBusy}>Verificar IA</button></div>
-            <p>A IA lê cada frase e identifica ações, personagens, objetos e enquadramentos. A análise roda no seu PC, sem API paga.</p>
-            <button className="primary ai-analyze" onClick={analyzeScriptWithAi} disabled={aiBusy}>{aiBusy ? "✦ ANALISANDO ROTEIRO..." : "✦ ANALISAR ROTEIRO COM IA"}</button>
+            <p>Cole somente a narração. A IA local interpreta a história, divide em cenas e cria planos, ações, personagens, objetos e enquadramentos sem exigir comandos no texto.</p>
+            <button className="primary ai-analyze" onClick={analyzeScriptWithAi} disabled={aiBusy}>{aiBusy ? "✦ ANALISANDO ROTEIRO..." : "✦ CRIAR CENAS AUTOMATICAMENTE"}</button>
             {aiSummary && <div className="ai-result"><b>PLANO APLICADO AO ROTEIRO</b><span>{aiSummary.scenes} cenas · {aiSummary.shots} planos · {aiSummary.actions} ações · {aiSummary.objects} tipos de objetos</span>{scriptBeforeAi && <button onClick={() => {setScript(scriptBeforeAi);setScriptBeforeAi("");setAiSummary(null);setStatus("Roteiro anterior restaurado");}}>Desfazer análise</button>}</div>}
             {!aiReady && <small className="ai-help">Para ativar: instale o Ollama e execute instalar-ia-local.bat na pasta do projeto. Depois clique em Verificar IA.</small>}
           </div>
           <textarea value={script} onChange={e => setScript(e.target.value)} spellCheck={false}/>
-          <div className="muted">Use [cena: tipo | nome] para iniciar cada cena. A IA adiciona [shot:] por frase sem reescrever a narração. Você também pode usar [acao:], [ambiente:], [elementos:], [camera:] e [animacao:] manualmente.</div>
+          <div className="muted">Escreva ou cole seu roteiro normalmente, sem colchetes ou instruções. Clique em CRIAR CENAS AUTOMATICAMENTE para a IA montar a estrutura visual sem alterar a narração.</div>
         </section>
         <section className="panel">
           <h2>▣ PRÉ-VISUALIZAÇÃO <span className="live">THREE.JS · 3D</span></h2>
-          {scene ? <Scene3DPreview name={scene.name} type={scene.type} directives={scene.directives} ratio={ratio} modelUrl={modelUrl || undefined}/> : <div className="preview"><div className="center"><b>Adicione uma cena ao roteiro</b><small>Aguardando conteúdo</small></div></div>}
+          {scene ? <Scene3DPreview name={scene.name} type={scene.type} directives={scene.directives} ratio={ratio} modelUrl={modelUrl || undefined}/> : <div className="preview"><div className="center"><b>Cole sua narração e crie as cenas com a IA</b><small>Aguardando conteúdo</small></div></div>}
           <p className="muted">Prévia 3D em tempo real; o MP4 final também é renderizado por Remotion + Three.js.</p>
         </section>
       </div>
       <div className="grid lower">
         <section className="panel"><h2>▤ LINHA DE CENAS <span className="muted">{project.scenes.length} cenas</span></h2>
           {project.scenes.map((item, index) => <button className={"scene " + (index === selected ? "chosen" : "")} key={item.id} onClick={() => setSelected(index)}><strong>{String(item.id).padStart(2, "0")}</strong><span><b>{item.name}</b><small>{item.type} · {countWords(item.narration)} palavras · {item.directives.length} marcadores</small></span>›</button>)}
-          {project.scenes.length === 0 && <p className="muted">Adicione uma linha [cena: tipo | nome].</p>}
+          {project.scenes.length === 0 && <p className="muted">As cenas serão criadas automaticamente depois da análise com IA.</p>}
         </section>
         <section className="panel"><h2>♫ MÍDIA E CONFIGURAÇÃO</h2><label>ÁUDIO DA NARRAÇÃO</label>
           <div className="upload"><span>♫</span><div><b>{audio?.name || "Nenhum áudio carregado"}</b><small>MP3, WAV ou M4A</small></div><button onClick={() => audioInput.current?.click()}>Enviar áudio</button><input ref={audioInput} hidden type="file" accept="audio/*" onChange={e => upload(e.target.files?.[0])}/></div>
