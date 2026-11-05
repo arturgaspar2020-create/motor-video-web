@@ -71,11 +71,27 @@ function inferAction(text: string): string {
 }
 
 function normalizeAction(value: unknown, narration: string, sceneAction: string): string {
+  const directiveAction = inferAction(sceneAction);
+  if (directiveAction !== "none") return directiveAction;
   const raw = String(value || "").toLowerCase().trim();
   const allowed = new Set(["idle","walking","running","opening","closing","picking up","dropping","sitting","standing","jumping","turning","looking","reacting","pointing","waving","fighting","climbing","swimming","hiding","driving","riding","talking","searching","crawling","kneeling","pushing","pulling","carrying","aiming","shooting","none"]);
   if (allowed.has(raw) && raw !== "none") return raw;
-  const narrationAction = inferAction(narration);
-  return narrationAction !== "none" ? narrationAction : inferAction(sceneAction);
+  return inferAction(narration);
+}
+
+function normalizeCamera(value: unknown): string {
+  const raw = String(value || "").trim();
+  if (!raw) return "medium shot";
+  const lower = raw.toLowerCase();
+  if (/plano\\s+aberto|plano\\s+geral|wide shot|establishing/.test(lower)) return "wide shot";
+  if (/plano\\s+m[eé]dio|medium shot/.test(lower)) return "medium shot";
+  if (/close.?up|primeiro plano|detalhe/.test(lower)) return "close-up";
+  if (/sobre o ombro|over.?the.?shoulder/.test(lower)) return "over-the-shoulder";
+  if (/ponto de vista|point.?of.?view|subjetiva/.test(lower)) return "point-of-view";
+  if (/c[aâ]mera tremendo|handheld|tremida/.test(lower)) return "handheld tracking shot";
+  if (/de baixo|low angle/.test(lower)) return "low angle";
+  if (/a[eé]rea|de cima|aerial|overhead/.test(lower)) return "aerial shot";
+  return raw.slice(0, 120);
 }
 
 function applyShotMarkers(script: string, scenes: SceneInput[], plans: ShotPlan[][]): string {
@@ -238,7 +254,7 @@ export function localAiApi(): Plugin {
                 const aiObjects = Array.isArray(item.objects) ? item.objects.map(value => String(value).trim()).filter(Boolean) : [];
                 return {
                   action: action.slice(0, 40),
-                  camera: String(item.camera || sceneCamera || "medium shot").slice(0, 120),
+                  camera: normalizeCamera(item.camera || sceneCamera),
                   objects: [...new Set([...sceneElements, ...aiObjects])].slice(0, 12).map(value => value.slice(0, 60)),
                   environment: String(item.environment || sceneEnvironment || "").slice(0, 120),
                   character: String(item.character || sceneCharacter || "").slice(0, 100),
