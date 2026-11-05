@@ -83,8 +83,8 @@ function normalizeCamera(value: unknown): string {
   const raw = String(value || "").trim();
   if (!raw) return "medium shot";
   const lower = raw.toLowerCase();
-  if (/plano\\s+aberto|plano\\s+geral|wide shot|establishing/.test(lower)) return "wide shot";
-  if (/plano\\s+m[eé]dio|medium shot/.test(lower)) return "medium shot";
+  if (/plano\s+aberto|plano\s+geral|wide shot|establishing/.test(lower)) return "wide shot";
+  if (/plano\s+m[eé]dio|medium shot/.test(lower)) return "medium shot";
   if (/close.?up|primeiro plano|detalhe/.test(lower)) return "close-up";
   if (/sobre o ombro|over.?the.?shoulder/.test(lower)) return "over-the-shoulder";
   if (/ponto de vista|point.?of.?view|subjetiva/.test(lower)) return "point-of-view";
