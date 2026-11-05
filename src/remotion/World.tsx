@@ -148,7 +148,8 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const isDesert=/desert|deserto|sand|areia|wueste|wüste/i.test(environment);
  const isSnow=/snow|neve|gelo|ice|schnee|eis/i.test(environment);
  const isCity=/city|cidade|street|rua|urban|urbano|stadt/i.test(environment);
- const isInterior=/inside|interior|room|quarto|casa|cabana|cabin|hut|cottage|office|escritório|zimmer|innenraum|haus|huette|hütte/i.test(environment);
+ const isElevator=/elevator|elevador|lift|aufzug/i.test(environment+" "+(shot?.scene_name||""));
+ const isInterior=isElevator||/inside|interior|room|quarto|casa|cabana|cabin|hut|cottage|office|escritório|zimmer|innenraum|haus|huette|hütte/i.test(environment);
  const isWar=/war|batalha|battle|ruins|ruínas|krieg|schlacht/i.test(environment);
  const isOcean=/ocean|sea|mar|oceano|lake|lago|meer|see/i.test(environment);
  const isRiver=/river|rio|stream|ribeiro/i.test(environment);
@@ -161,11 +162,13 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
  const motion=inferMotion(action);
  const travel=motion==="run"?Math.min(3.2,localMotionTime*2.7):motion==="walk"?Math.min(3.2,localMotionTime*1.15):0;
  const cameraHint=(shot?.camera||"").toLowerCase();
+ const elevatorShake=isElevator&&(/react|shock|panic|pane|solavanco|flicker|pisca/i.test(action+" "+(shot?.narration||"")));
  const closeCamera=/close|close-up|rosto|detalhe|reaction/i.test(cameraHint);
  const aerialCamera=/aerial|drone|overhead|a[eé]rea|alto/i.test(cameraHint);
  useFrame(()=>{
    const target=new THREE.Vector3(actorX,closeCamera?1.8:1.35,-travel);
    const desired=new THREE.Vector3(actorX,aerialCamera?10:closeCamera?2.9:4.15,(closeCamera?6.8:aerialCamera?13:10.5)-travel);
+   if(elevatorShake){desired.x+=Math.sin(t*38)*.055;desired.y+=Math.cos(t*31)*.035;}
    camera.position.lerp(desired,.12);
    camera.lookAt(target);
  });
@@ -182,7 +185,8 @@ export const CanvasWorld:React.FC<Props> = ({shots,modelFile}) => {
   {!isCity&&!isInterior&&!isOcean && Array.from({length:9},(_,i)=><mesh key={i} position={[-13+i*3.3,2.5+(i%3)*.8,-13-(i%2)*2]} rotation={[0,i*.5,0]} castShadow><coneGeometry args={[2.8,5+(i%3)*1.2,5]}/><meshStandardMaterial color={isSnow?"#687b8b":"#536d79"} roughness={1}/></mesh>)}
   {!isCity&&!isInterior&&!isWar&&!isDesert&&!isOcean && Array.from({length:16},(_,i)=><group key={i} rotation={[0,0,Math.sin(t*1.4+i)*.025]}><Tree x={(i%2?1:-1)*(4.3+(i%4)*1.1)} z={-3-Math.floor(i/2)*2.1} scale={.8+(i%3)*.16}/></group>)}
   {isCity && Array.from({length:10},(_,i)=><mesh key={i} position={[-11+i*2.5,1.7+(i%3)*.7,-8-(i%2)*3]} castShadow><boxGeometry args={[1.8,3.4+(i%3)*1.4,1.8]}/><meshStandardMaterial color={i%2?"#536171":"#777c82"} roughness={0.95}/></mesh>)}
-  {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color="#625447"/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color="#6d5c4a"/></mesh></group>}
+  {isInterior && <group><mesh position={[0,3,-5]}><boxGeometry args={[18,6,.25]}/><meshStandardMaterial color={isElevator?"#72777d":"#625447"}/></mesh><mesh position={[-7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color={isElevator?"#858b91":"#6d5c4a"}/></mesh><mesh position={[7,2,0]}><boxGeometry args={[.25,4,12]}/><meshStandardMaterial color={isElevator?"#858b91":"#6d5c4a"}/></mesh>{isElevator&&<><mesh position={[-.82,1.55,-4.82]}><boxGeometry args={[1.62,3.1,.12]}/><meshStandardMaterial color="#555b62" metalness={.35} roughness={.42}/></mesh><mesh position={[.82,1.55,-4.82]}><boxGeometry args={[1.62,3.1,.12]}/><meshStandardMaterial color="#555b62" metalness={.35} roughness={.42}/></mesh><mesh position={[3.1,1.75,-.8]}><boxGeometry args={[.08,1.25,.42]}/><meshStandardMaterial color="#303942" metalness={.4}/></mesh>{Array.from({length:6},(_,i)=><mesh key={i} position={[3.045,2.18-i*.17,-.56]}><cylinderGeometry args={[.045,.045,.035,16]}/><meshStandardMaterial color={i===2?"#6fc4ff":"#d8dce0"} emissive={i===2?"#278bd1":"#000000"} emissiveIntensity={i===2?1.1:0}/></mesh>)}</>}</group>}
+  {isElevator&&<pointLight position={[0,4.6,0]} color="#e8f3ff" intensity={elevatorShake?1.1+Math.abs(Math.sin(t*18))*2.2:2.1} distance={9}/>}
   {isWar && Array.from({length:7},(_,i)=><mesh key={i} position={[-4+i*1.3,.25,(i%2)*-2]} rotation={[.2*i,.3*i,.1*i]} castShadow><boxGeometry args={[.8,.5,.65]}/><meshStandardMaterial color="#5d5146"/></mesh>)}
   <group position={[actorX,0,-travel]} rotation={[0,motion==="turn"?motionProgress(localMotionTime,shotDuration)*Math.PI*.75:0,0]}>
     {modelFile ? <Suspense fallback={<Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/> }><GLBCharacter url={modelFile} frame={shotFrame} fps={fps} action={action} duration={shotDuration}/></Suspense> : <Character frame={shotFrame} fps={fps} action={action} expression={expression} duration={shotDuration}/>}
